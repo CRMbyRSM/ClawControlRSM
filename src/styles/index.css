@@ -9,7 +9,7 @@
 
   /* Sizing */
   --sidebar-width: 280px;
-  --sidebar-collapsed: 64px;
+  --sidebar-collapsed: 72px;
   --right-panel-width: 320px;
   --top-bar-height: 56px;
   --input-area-height: 120px;
@@ -198,6 +198,19 @@ a {
   display: none;
 }
 
+.sidebar.collapsed .logo {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  display: none;
+}
+
 .sidebar-toggle {
   width: 28px;
   height: 28px;
@@ -263,6 +276,14 @@ a {
 .new-chat-btn svg {
   width: 18px;
   height: 18px;
+}
+
+.sidebar.collapsed .new-chat-btn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  margin: var(--space-md) auto;
+  border-radius: 50%;
 }
 
 .sidebar.collapsed .new-chat-btn span {
@@ -404,6 +425,21 @@ a {
 .sidebar.collapsed .session-content,
 .sidebar.collapsed .session-delete {
   display: none;
+}
+
+.sidebar.collapsed .session-item {
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.sidebar.collapsed .session-item:hover {
+  transform: none;
+}
+
+.sidebar.collapsed .session-indicator {
+  margin: 0;
+  width: 10px;
+  height: 10px;
 }
 
 .empty-sessions {
@@ -569,6 +605,11 @@ a {
 }
 
 .sidebar.collapsed .agent-section {
+  padding: var(--space-md);
+}
+
+.sidebar.collapsed .agent-selected {
+  justify-content: center;
   padding: var(--space-sm);
 }
 

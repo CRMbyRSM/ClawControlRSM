@@ -36,6 +36,25 @@ npm run dev
 The app connects to your local OpenClaw instance. Default configuration:
 - **Server URL**: `wss://your-server.local` or `ws://localhost:8080`
 
+### Connecting to a Local Server
+
+1. Make sure your OpenClaw server is running on your local network.
+2. In the app, open **Settings** (gear icon).
+3. Set **Server URL** to your local WebSocket endpoint (for example: `ws://192.168.1.50:8080`).
+4. If your server requires auth, set **Authentication Mode** and enter your **Gateway Token/Password**.
+5. Click **Save & Connect**.
+
+### Connecting Through Tailscale
+
+You must be connected to Tailscale before the app can reach your OpenClaw server.
+
+1. Connect your computer to Tailscale.
+2. Get your server's Tailscale hostname or IP.
+3. In the app, open **Settings** (gear icon).
+4. Set **Server URL** to your Tailscale endpoint (for example: `wss://your-server.tailnet-123.ts.net`).
+5. If your server requires auth, set **Authentication Mode** and enter your **Gateway Token/Password**.
+6. Click **Save & Connect**.
+
 ### Settings Management
 
 You can configure the connection details directly in the application by clicking the **Settings (Gear)** icon in the top bar.

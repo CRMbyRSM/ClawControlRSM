@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron'
 import { join } from 'path'
 
 let mainWindow: BrowserWindow | null = null
+const trustedHosts = new Set<string>()
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,6 +28,17 @@ function createWindow() {
     }
   })
 
+  // Enable context menu for copy/paste
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    const menu = Menu.buildFromTemplate([
+      { role: 'cut', enabled: params.editFlags.canCut },
+      { role: 'copy', enabled: params.editFlags.canCopy },
+      { role: 'paste', enabled: params.editFlags.canPaste },
+      { role: 'selectAll', enabled: params.editFlags.canSelectAll }
+    ])
+    menu.popup()
+  })
+
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
@@ -40,6 +52,21 @@ function createWindow() {
   })
 }
 
+
+// Handle certificate errors - trust hosts that user has explicitly accepted
+app.on('certificate-error', (event, _webContents, url, _error, _certificate, callback) => {
+  try {
+    const parsedUrl = new URL(url)
+    if (trustedHosts.has(parsedUrl.hostname)) {
+      event.preventDefault()
+      callback(true)
+      return
+    }
+  } catch {
+    // Ignore URL parsing errors
+  }
+  callback(false)
+})
 
 app.whenReady().then(createWindow)
 
@@ -66,4 +93,14 @@ ipcMain.handle('openclaw:getConfig', async () => {
     defaultUrl: '',
     theme: 'dark'
   }
+})
+
+ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+  await shell.openExternal(url)
+})
+
+// Trust a hostname for certificate errors
+ipcMain.handle('cert:trustHost', async (_event, hostname: string) => {
+  trustedHosts.add(hostname)
+  return { trusted: true, hostname }
 })

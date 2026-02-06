@@ -225,15 +225,21 @@ export const useStore = create<AppState>()(
 
       // Actions
       initializeApp: async () => {
-        // Try to get config from electron
+        // Try to get config from electron (only use defaults if not already configured)
         if (window.electronAPI) {
           const config = await window.electronAPI.getConfig()
-          set({ serverUrl: config.defaultUrl, theme: config.theme as 'dark' | 'light' })
+          const { serverUrl, theme } = get()
+          if (!serverUrl && config.defaultUrl) {
+            set({ serverUrl: config.defaultUrl })
+          }
+          if (config.theme) {
+            set({ theme: config.theme as 'dark' | 'light' })
+          }
         }
 
-        // Show settings if no token configured
-        const { gatewayToken } = get()
-        if (!gatewayToken) {
+        // Show settings if no URL or token configured
+        const { serverUrl, gatewayToken } = get()
+        if (!serverUrl || !gatewayToken) {
           set({ showSettings: true })
           return
         }
@@ -249,6 +255,13 @@ export const useStore = create<AppState>()(
 
       connect: async () => {
         const { serverUrl, gatewayToken } = get()
+
+        // Show settings if URL is not configured
+        if (!serverUrl) {
+          set({ showSettings: true })
+          return
+        }
+
         set({ connecting: true })
 
         try {

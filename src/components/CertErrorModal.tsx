@@ -1,12 +1,28 @@
 import { useStore } from '../store'
 
 export function CertErrorModal() {
-  const { showCertError, certErrorUrl, hideCertErrorModal } = useStore()
+  const { showCertError, certErrorUrl, hideCertErrorModal, connect } = useStore()
 
   if (!showCertError || !certErrorUrl) return null
 
-  const handleOpenUrl = () => {
-    window.open(certErrorUrl, '_blank')
+  const handleTrustCert = async () => {
+    try {
+      // Extract hostname from the URL
+      const url = new URL(certErrorUrl)
+      const hostname = url.hostname
+
+      if (window.electronAPI?.trustHost) {
+        await window.electronAPI.trustHost(hostname)
+        hideCertErrorModal()
+        // Retry connection
+        await connect()
+      } else {
+        // Fallback for browser - open in new tab
+        window.open(certErrorUrl, '_blank')
+      }
+    } catch (err) {
+      console.error('Failed to trust certificate:', err)
+    }
   }
 
   return (
@@ -29,17 +45,8 @@ export function CertErrorModal() {
           </div>
 
           <p className="cert-error-message">
-            The server is using a self-signed certificate that your browser doesn't trust.
+            The server is using a self-signed or untrusted certificate.
           </p>
-
-          <div className="cert-error-steps">
-            <h3>To fix this:</h3>
-            <ol>
-              <li>Click the button below to open the server URL</li>
-              <li>Accept the certificate warning in your browser</li>
-              <li>Close that tab and try connecting again</li>
-            </ol>
-          </div>
 
           <div className="cert-error-url">
             <code>{certErrorUrl}</code>
@@ -50,8 +57,8 @@ export function CertErrorModal() {
           <button className="btn btn-secondary" onClick={hideCertErrorModal}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleOpenUrl}>
-            Open URL to Accept Certificate
+          <button className="btn btn-primary" onClick={handleTrustCert}>
+            Trust Certificate & Connect
           </button>
         </div>
       </div>

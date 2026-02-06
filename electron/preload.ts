@@ -5,6 +5,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   connect: (url: string) => ipcRenderer.invoke('openclaw:connect', url),
   getConfig: () => ipcRenderer.invoke('openclaw:getConfig'),
+  openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  trustHost: (hostname: string) => ipcRenderer.invoke('cert:trustHost', hostname),
   platform: process.platform
 })
 
@@ -14,6 +16,8 @@ declare global {
     electronAPI: {
       connect: (url: string) => Promise<{ success: boolean; url: string }>
       getConfig: () => Promise<{ defaultUrl: string; theme: string }>
+      openExternal: (url: string) => Promise<void>
+      trustHost: (hostname: string) => Promise<{ trusted: boolean; hostname: string }>
       platform: NodeJS.Platform
     }
   }
