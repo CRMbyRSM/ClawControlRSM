@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveToken: (token: string) => ipcRenderer.invoke('auth:saveToken', token),
   getToken: () => ipcRenderer.invoke('auth:getToken'),
   isEncryptionAvailable: () => ipcRenderer.invoke('auth:isEncryptionAvailable'),
+  showNotification: (title: string, body: string) => ipcRenderer.invoke('notification:show', title, body),
   platform: process.platform
 })
 
@@ -24,6 +25,7 @@ declare global {
       saveToken: (token: string) => Promise<{ saved: boolean }>
       getToken: () => Promise<string>
       isEncryptionAvailable: () => Promise<boolean>
+      showNotification: (title: string, body: string) => Promise<void>
       platform: NodeJS.Platform
     }
   }

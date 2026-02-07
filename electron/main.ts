@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Menu, safeStorage } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Menu, safeStorage, Notification } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
 
@@ -125,6 +125,11 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
+})
+
+// Notification handler
+ipcMain.handle('notification:show', (_event, title: string, body: string) => {
+  new Notification({ title, body }).show()
 })
 
 // IPC handlers for OpenClaw communication

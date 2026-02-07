@@ -9,6 +9,7 @@ interface Window {
     saveToken: (token: string) => Promise<{ saved: boolean }>
     getToken: () => Promise<string>
     isEncryptionAvailable: () => Promise<boolean>
+    showNotification: (title: string, body: string) => Promise<void>
     platform: NodeJS.Platform
   }
 }
