@@ -33,43 +33,44 @@
   --radius-xl: 24px;
 }
 
-/* Dark Theme (Default) */
+/* Dark Theme (Default) — RSM Brand */
 [data-theme="dark"] {
-  --bg-deep: #06080a;
-  --bg-primary: #0d1117;
-  --bg-elevated: #161b22;
-  --bg-hover: #21262d;
-  --bg-active: #30363d;
+  --bg-deep: #07090c;
+  --bg-primary: #0a0d12;
+  --bg-elevated: #0f1219;
+  --bg-hover: #171c25;
+  --bg-active: #1e2533;
 
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
+  --text-primary: #e0e6ed;
+  --text-secondary: #8594a3;
+  --text-muted: #4a5568;
 
-  --accent-cyan: #00d9ff;
-  --accent-cyan-dim: #00a3bf;
-  --accent-cyan-subtle: rgba(0, 217, 255, 0.1);
-  --accent-purple: #a855f7;
-  --accent-green: #22c55e;
+  --accent-cyan: #17a192;
+  --accent-cyan-dim: #0d7a6e;
+  --accent-cyan-subtle: rgba(23, 161, 146, 0.12);
+  --accent-cyan-bright: #20d4a2;
+  --accent-purple: #8b5cf6;
+  --accent-green: #20d4a2;
   --accent-amber: #f59e0b;
   --accent-red: #ef4444;
 
-  --border-subtle: rgba(240, 246, 252, 0.08);
-  --border-default: rgba(240, 246, 252, 0.15);
+  --border-subtle: rgba(200, 208, 220, 0.06);
+  --border-default: rgba(200, 208, 220, 0.10);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 
-  --glow-cyan: 0 0 20px rgba(0, 217, 255, 0.25);
-  --glow-purple: 0 0 20px rgba(168, 85, 247, 0.25);
+  --glow-cyan: 0 0 20px rgba(23, 161, 146, 0.3);
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.25);
 
   /* Scrollbar */
-  --scrollbar-thumb: rgba(139, 148, 158, 0.35);
-  --scrollbar-thumb-hover: rgba(0, 217, 255, 0.5);
-  --scrollbar-thumb-active: rgba(0, 217, 255, 0.7);
+  --scrollbar-thumb: rgba(133, 148, 163, 0.25);
+  --scrollbar-thumb-hover: rgba(23, 161, 146, 0.5);
+  --scrollbar-thumb-active: rgba(23, 161, 146, 0.7);
 }
 
-/* Light Theme */
+/* Light Theme — RSM Brand */
 [data-theme="light"] {
   --bg-deep: #f0f3f6;
   --bg-primary: #ffffff;
@@ -81,9 +82,10 @@
   --text-secondary: #57606a;
   --text-muted: #8b949e;
 
-  --accent-cyan: #0284c7;
-  --accent-cyan-dim: #0369a1;
-  --accent-cyan-subtle: rgba(2, 132, 199, 0.1);
+  --accent-cyan: #0d7a6e;
+  --accent-cyan-dim: #095e55;
+  --accent-cyan-subtle: rgba(13, 122, 110, 0.1);
+  --accent-cyan-bright: #17a192;
   --accent-purple: #7c3aed;
   --accent-green: #16a34a;
   --accent-amber: #d97706;
@@ -96,13 +98,13 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
 
-  --glow-cyan: 0 0 20px rgba(2, 132, 199, 0.2);
+  --glow-cyan: 0 0 20px rgba(13, 122, 110, 0.2);
   --glow-purple: 0 0 20px rgba(124, 58, 237, 0.2);
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(87, 96, 106, 0.3);
-  --scrollbar-thumb-hover: rgba(2, 132, 199, 0.5);
-  --scrollbar-thumb-active: rgba(2, 132, 199, 0.7);
+  --scrollbar-thumb-hover: rgba(13, 122, 110, 0.5);
+  --scrollbar-thumb-active: rgba(13, 122, 110, 0.7);
 }
 
 /* ===== Custom Scrollbars ===== */
@@ -335,7 +337,7 @@ a {
   margin: var(--space-sm) var(--space-md);
   padding: var(--space-xs) var(--space-sm);
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-cyan-dim));
-  color: #000;
+  color: #fff;
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 0.75rem;
@@ -346,7 +348,7 @@ a {
 
 .new-chat-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  box-shadow: 0 0 30px rgba(23, 161, 146, 0.4);
 }
 
 .new-chat-btn svg {
@@ -1258,7 +1260,7 @@ a {
 
 .message.user .message-bubble {
   background: var(--accent-cyan-subtle);
-  border-color: rgba(0, 217, 255, 0.2);
+  border-color: rgba(23, 161, 146, 0.2);
 }
 
 .message-bubble p {
@@ -1670,14 +1672,14 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
+  color: #fff;
   transition: all var(--transition-fast);
   box-shadow: var(--glow-cyan);
 }
 
 .send-btn:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  box-shadow: 0 0 30px rgba(23, 161, 146, 0.4);
 }
 
 .send-btn:active:not(:disabled) {
