@@ -26,20 +26,21 @@ export function InputArea() {
     }
   }, [message])
 
-  const compressImage = useCallback((dataUrl: string, mimeType: string): Promise<{ dataUrl: string; mimeType: string }> => {
+  const compressImage = useCallback((dataUrl: string, _mimeType: string): Promise<{ dataUrl: string; mimeType: string }> => {
     return new Promise((resolve) => {
       const img = new Image()
       img.onload = () => {
-        const MAX_WIDTH = 1920
-        const QUALITY = 0.8
+        const MAX_DIM = 1920
+        const QUALITY = 0.75
 
         let width = img.naturalWidth
         let height = img.naturalHeight
 
-        // Scale down if wider than MAX_WIDTH, maintaining aspect ratio
-        if (width > MAX_WIDTH) {
-          height = Math.round(height * (MAX_WIDTH / width))
-          width = MAX_WIDTH
+        // Scale down if either dimension exceeds MAX_DIM
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const scale = Math.min(MAX_DIM / width, MAX_DIM / height)
+          width = Math.round(width * scale)
+          height = Math.round(height * scale)
         }
 
         const canvas = document.createElement('canvas')
@@ -48,14 +49,11 @@ export function InputArea() {
         const ctx = canvas.getContext('2d')!
         ctx.drawImage(img, 0, 0, width, height)
 
-        // Keep PNG (with transparency support) for PNGs, otherwise export as JPEG
-        const isPng = mimeType === 'image/png'
-        const outputMime = isPng ? 'image/png' : 'image/jpeg'
-        // For PNG, quality param is ignored by toDataURL but we pass it anyway
-        // For JPEG, 0.8 gives good compression
-        const compressedDataUrl = canvas.toDataURL(outputMime, QUALITY)
+        // Always export as JPEG — PNG toDataURL ignores quality and produces huge files.
+        // Screenshots don't need transparency.
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', QUALITY)
 
-        resolve({ dataUrl: compressedDataUrl, mimeType: outputMime })
+        resolve({ dataUrl: compressedDataUrl, mimeType: 'image/jpeg' })
       }
       img.onerror = () => {
         // Fallback: return the original if compression fails
