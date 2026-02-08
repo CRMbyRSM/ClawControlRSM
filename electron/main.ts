@@ -1,6 +1,19 @@
 import { app, BrowserWindow, ipcMain, shell, Menu, safeStorage, Notification } from 'electron'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
+
+// Read version from package.json (works in both dev and prod)
+function getAppVersion(): string {
+  try {
+    const pkgPath = app.isPackaged
+      ? join(dirname(app.getAppPath()), 'package.json')
+      : join(__dirname, '..', 'package.json')
+    const pkg = JSON.parse(readFileSync(existsSync(pkgPath) ? pkgPath : join(app.getAppPath(), 'package.json'), 'utf-8'))
+    return pkg.version || app.getVersion()
+  } catch {
+    return app.getVersion()
+  }
+}
 
 let mainWindow: BrowserWindow | null = null
 const trustedHosts = new Set<string>()
@@ -82,7 +95,7 @@ function createWindow() {
   })
 
   // Set window title with version
-  mainWindow.setTitle(`ClawControlRSM v${app.getVersion()}`)
+  mainWindow.setTitle(`ClawControlRSM v${getAppVersion()}`)
 
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {

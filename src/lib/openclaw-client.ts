@@ -248,7 +248,7 @@ export class OpenClawClient {
         client: {
           id: 'gateway-client',
           displayName: 'ClawControlRSM',
-          version: '1.4.6',
+          version: '1.4.7',
           platform: 'web',
           mode: 'backend'
         },
