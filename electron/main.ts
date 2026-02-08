@@ -81,6 +81,9 @@ function createWindow() {
     menu.popup()
   })
 
+  // Set window title with version
+  mainWindow.setTitle(`ClawControlRSM v${app.getVersion()}`)
+
   // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)

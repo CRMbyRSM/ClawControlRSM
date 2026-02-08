@@ -59,6 +59,7 @@ export function Sidebar() {
           <div className="logo">
             <img className="logo-icon" src={logoUrl} alt="ClawControlRSM logo" />
             <span className="logo-text">ClawControlRSM</span>
+            <span className="logo-version">v{__APP_VERSION__}</span>
           </div>
           <button
             className="sidebar-toggle"

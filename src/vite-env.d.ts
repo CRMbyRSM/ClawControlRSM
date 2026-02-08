@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+declare const __APP_VERSION__: string
+
 interface Window {
   electronAPI: {
     connect: (url: string) => Promise<{ success: boolean; url: string }>

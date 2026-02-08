@@ -259,7 +259,18 @@ a {
   color: var(--accent-cyan);
 }
 
-.sidebar.collapsed .logo-text {
+.logo-version {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .logo-version {
   display: none;
 }
 
