@@ -967,8 +967,9 @@ a {
 }
 
 .chat-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Empty Chat State */
@@ -1533,7 +1534,7 @@ a {
 
 /* Attachment preview strip */
 .attachment-preview {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto var(--space-sm);
   display: flex;
   gap: var(--space-sm);
@@ -1625,7 +1626,7 @@ a {
 }
 
 .input-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   gap: var(--space-sm);
@@ -1698,7 +1699,7 @@ a {
 }
 
 .input-footer {
-  max-width: 900px;
+  max-width: 1200px;
   margin: var(--space-sm) auto 0;
   display: flex;
   justify-content: space-between;
