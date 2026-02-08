@@ -310,12 +310,33 @@ export const useStore = create<AppState>()(
       sessions: [],
       currentSessionId: null,
       setCurrentSession: (sessionId) => {
-        const { unreadCounts } = get()
+        const { currentSessionId, unreadCounts, mainView } = get()
+
+        // If re-selecting the current session, just ensure we're in chat view
+        if (sessionId === currentSessionId) {
+          if (mainView !== 'chat') {
+            set({ mainView: 'chat', selectedSkill: null, selectedCronJob: null, selectedAgentDetail: null })
+          }
+          return
+        }
+
         const { [sessionId]: _, ...restCounts } = unreadCounts
-        set({ currentSessionId: sessionId, messages: [], unreadCounts: restCounts })
+        set({
+          currentSessionId: sessionId,
+          messages: [],
+          unreadCounts: restCounts,
+          // Always switch back to chat view when selecting a session
+          mainView: 'chat',
+          selectedSkill: null,
+          selectedCronJob: null,
+          selectedAgentDetail: null
+        })
         // Load session messages
         get().client?.getSessionMessages(sessionId).then((messages) => {
-          set({ messages })
+          // Only apply if we're still on this session (prevent stale overwrites)
+          if (get().currentSessionId === sessionId) {
+            set({ messages })
+          }
         })
       },
       createNewSession: async () => {
@@ -578,6 +599,18 @@ export const useStore = create<AppState>()(
             get().fetchSkills(),
             get().fetchCronJobs()
           ])
+
+          // Auto-select the most recent session if none is selected
+          const { currentSessionId: currentId, sessions: loadedSessions } = get()
+          if (!currentId && loadedSessions.length > 0) {
+            const topSession = loadedSessions[0]
+            set({ currentSessionId: topSession.id })
+            client.getSessionMessages(topSession.id).then((messages) => {
+              if (get().currentSessionId === topSession.id) {
+                set({ messages })
+              }
+            })
+          }
         } catch {
           set({ connecting: false, connected: false })
         }
