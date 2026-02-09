@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { OpenClawClient, Message, Session, Agent, Skill, CronJob, AgentFile } from '../lib/openclaw-client'
 import * as Platform from '../lib/platform'
+import { deepSanitize } from '../lib/safe-render'
 
 interface AgentDetail {
   agent: Agent
@@ -335,7 +336,7 @@ export const useStore = create<AppState>()(
         get().client?.getSessionMessages(sessionId).then((messages) => {
           // Only apply if we're still on this session (prevent stale overwrites)
           if (get().currentSessionId === sessionId) {
-            set({ messages })
+            set({ messages: deepSanitize(messages) })
           }
         })
       },
@@ -382,7 +383,7 @@ export const useStore = create<AppState>()(
         // Load any existing messages for the spawned session
         const messages = await client.getSessionMessages(session.id)
         if (messages.length > 0) {
-          set({ messages })
+          set({ messages: deepSanitize(messages) })
         }
       },
 
@@ -475,7 +476,7 @@ export const useStore = create<AppState>()(
 
           // Set up event handlers
           client.on('message', (msgArg: unknown) => {
-            const message = msgArg as Message
+            const message = deepSanitize(msgArg as Message)
             let replacedStreaming = false
 
             set((state) => {
@@ -530,12 +531,17 @@ export const useStore = create<AppState>()(
           })
 
           client.on('streamChunk', (chunkArg: unknown) => {
-            const payload = chunkArg as any
-            const kind = payload && typeof payload === 'object' ? String(payload.kind || '') : ''
-            const text =
-              kind && payload && typeof payload === 'object'
-                ? String(payload.text || '')
-                : String(chunkArg)
+            // Defensive: ensure chunk is always a string no matter what the gateway sends
+            let text: string
+            if (typeof chunkArg === 'string') {
+              text = chunkArg
+            } else if (chunkArg && typeof chunkArg === 'object') {
+              const payload = chunkArg as any
+              text = String(payload.text || payload.delta || payload.content || '')
+            } else {
+              text = String(chunkArg ?? '')
+            }
+            const kind = (chunkArg && typeof chunkArg === 'object') ? String((chunkArg as any).kind || '') : ''
 
             // Skip empty chunks
             if (!text) return
@@ -612,7 +618,7 @@ export const useStore = create<AppState>()(
             set({ currentSessionId: topSession.id })
             client.getSessionMessages(topSession.id).then((messages) => {
               if (get().currentSessionId === topSession.id) {
-                set({ messages })
+                set({ messages: deepSanitize(messages) })
               }
             })
           }
@@ -749,14 +755,14 @@ export const useStore = create<AppState>()(
       fetchSessions: async () => {
         const { client } = get()
         if (!client) return
-        const sessions = await client.listSessions()
+        const sessions = deepSanitize(await client.listSessions())
         set({ sessions })
       },
 
       fetchAgents: async () => {
         const { client } = get()
         if (!client) return
-        const agents = await client.listAgents()
+        const agents = deepSanitize(await client.listAgents())
         set({ agents })
         if (agents.length > 0 && !get().currentAgentId) {
           set({ currentAgentId: agents[0].id })
@@ -766,14 +772,14 @@ export const useStore = create<AppState>()(
       fetchSkills: async () => {
         const { client } = get()
         if (!client) return
-        const skills = await client.listSkills()
+        const skills = deepSanitize(await client.listSkills())
         set({ skills })
       },
 
       fetchCronJobs: async () => {
         const { client } = get()
         if (!client) return
-        const cronJobs = await client.listCronJobs()
+        const cronJobs = deepSanitize(await client.listCronJobs())
         set({ cronJobs })
       }
     }),

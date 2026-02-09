@@ -20,8 +20,25 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[ClawControlRSM] React error boundary caught:', error, info)
-    // Store component stack for display
+    console.error('[ClawControlRSM] React error boundary caught:', error)
+    console.error('[ClawControlRSM] Component stack:', info.componentStack)
+    console.error('[ClawControlRSM] Full error:', error.message, error.stack)
+    // Try to dump store state for debugging
+    try {
+      const storeModule = require('../store')
+      const state = storeModule?.useStore?.getState?.()
+      if (state) {
+        console.error('[ClawControlRSM] Store snapshot — messages:', state.messages?.length, 'sessions:', state.sessions?.length, 'agents:', state.agents?.length)
+        // Check for objects in messages
+        state.messages?.forEach((m: any, i: number) => {
+          for (const [k, v] of Object.entries(m || {})) {
+            if (v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v)) {
+              console.error(`[ClawControlRSM] OBJECT FOUND in message[${i}].${k}:`, JSON.stringify(v).slice(0, 200))
+            }
+          }
+        })
+      }
+    } catch { /* ignore */ }
     this.setState({ error, componentStack: info.componentStack || '' } as any)
   }
 

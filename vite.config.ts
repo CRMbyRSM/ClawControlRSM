@@ -9,6 +9,10 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
+  build: {
+    sourcemap: true,
+    minify: 'esbuild'
+  },
   plugins: [
     react(),
     electron([
