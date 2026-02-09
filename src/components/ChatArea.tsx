@@ -97,12 +97,26 @@ export function ChatArea() {
     isAutoScrollRef.current = nearBottom
   }, [])
 
+  // Pre-compute channel info for dividers
+  // IMPORTANT: This useMemo MUST be before any early returns (Rules of Hooks)
+  const messagesWithMeta = useMemo(() => {
+    let lastChannel = ''
+    return messages.map((message, index) => {
+      const isNewDay = index === 0 || !isSameDay(new Date(message.timestamp), new Date(messages[index - 1].timestamp))
+      const currentChannel = detectChannel(message)
+      const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
+      lastChannel = currentChannel
+      return { message, isNewDay, showChannelDivider, channel: currentChannel }
+    })
+  }, [messages])
+
   useEffect(() => {
     if (isAutoScrollRef.current) {
       chatEndRef.current?.scrollIntoView({ behavior: 'auto' })
     }
   }, [messages])
 
+  // Empty state — all hooks already called above
   if (messages.length === 0) {
     return (
       <div className="chat-area">
@@ -127,18 +141,6 @@ export function ChatArea() {
       </div>
     )
   }
-
-  // Pre-compute channel info for dividers
-  const messagesWithMeta = useMemo(() => {
-    let lastChannel = ''
-    return messages.map((message, index) => {
-      const isNewDay = index === 0 || !isSameDay(new Date(message.timestamp), new Date(messages[index - 1].timestamp))
-      const currentChannel = detectChannel(message)
-      const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
-      lastChannel = currentChannel
-      return { message, isNewDay, showChannelDivider, channel: currentChannel }
-    })
-  }, [messages])
 
   return (
     <div className="chat-area" ref={chatAreaRef} onScroll={handleScroll}>
