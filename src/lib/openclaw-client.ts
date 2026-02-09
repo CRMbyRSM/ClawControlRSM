@@ -248,7 +248,7 @@ export class OpenClawClient {
         client: {
           id: 'gateway-client',
           displayName: 'ClawControlRSM',
-          version: '1.5.4',
+          version: '1.5.5',
           platform: 'web',
           mode: 'backend'
         },
@@ -422,10 +422,21 @@ export class OpenClawClient {
           if (payload.message) {
             const text = this.extractTextFromContent(payload.message.content)
             if (text && !this.isHeartbeatContent(text)) {
+              // Extract thinking safely
+              let thinking: string | undefined
+              const rawContent = payload.message.content
+              if (Array.isArray(rawContent)) {
+                const thinkingBlock = rawContent.find((c: any) => c.type === 'thinking')
+                if (thinkingBlock) {
+                  thinking = typeof thinkingBlock.thinking === 'string' ? thinkingBlock.thinking : JSON.stringify(thinkingBlock.thinking)
+                }
+              }
+
               this.emit('message', {
-                id: payload.message.id,
+                id: String(payload.message.id || `msg-${Date.now()}`),
                 role: payload.message.role,
-                content: text,
+                content: typeof text === 'string' ? text : String(text),
+                thinking,
                 timestamp: new Date().toISOString()
               })
             }
@@ -492,7 +503,13 @@ export class OpenClawClient {
         agentId: s.agentId,
         createdAt: new Date(s.updatedAt || s.createdAt || Date.now()).toISOString(),
         updatedAt: new Date(s.updatedAt || s.createdAt || Date.now()).toISOString(),
-        lastMessage: s.lastMessagePreview || s.lastMessage,
+        lastMessage: (() => {
+          const raw = s.lastMessagePreview || s.lastMessage
+          if (!raw) return undefined
+          if (typeof raw === 'string') return raw
+          if (typeof raw === 'object' && raw.content) return typeof raw.content === 'string' ? raw.content : String(raw.content)
+          return String(raw)
+        })(),
         spawned: s.spawned ?? s.isSpawned ?? undefined,
         parentSessionId: s.parentSessionId || s.parentKey || undefined
       }))
@@ -604,10 +621,10 @@ export class OpenClawClient {
           if ((!content && !thinking) || isHeartbeat) return null
 
           return {
-            id: msg.id || m.id || m.runId || `history-${Math.random()}`,
+            id: String(msg.id || m.id || m.runId || `history-${Math.random()}`),
             role: msg.role || m.role || 'assistant',
-            content,
-            thinking,
+            content: typeof content === 'string' ? content : String(content || ''),
+            thinking: thinking ? (typeof thinking === 'string' ? thinking : JSON.stringify(thinking)) : undefined,
             timestamp: new Date(msg.timestamp || m.timestamp || msg.ts || m.ts || msg.createdAt || m.createdAt || Date.now()).toISOString()
           }
         }) as (Message | null)[]

@@ -307,10 +307,10 @@ const MessageBubble = memo(function MessageBubble({
                 </svg>
                 <span>Thinking...</span>
               </div>
-              <div className="thinking-content">{message.thinking}</div>
+              <div className="thinking-content">{typeof message.thinking === 'string' ? message.thinking : JSON.stringify(message.thinking)}</div>
             </div>
           )}
-          <MessageContent content={message.content} />
+          <MessageContent content={typeof message.content === 'string' ? message.content : String(message.content || '')} />
         </div>
       </div>
 

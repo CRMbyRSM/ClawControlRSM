@@ -101,9 +101,9 @@ export function Sidebar() {
                   </span>
                 )}
                 <div className="session-content">
-                  <div className="session-title">{session.title}</div>
+                  <div className="session-title">{typeof session.title === 'string' ? session.title : String(session.title || 'New Chat')}</div>
                   {session.lastMessage && (
-                    <div className="session-preview">{session.lastMessage}</div>
+                    <div className="session-preview">{typeof session.lastMessage === 'string' ? session.lastMessage : String(session.lastMessage)}</div>
                   )}
                   <div className="session-time">
                     {formatDistanceToNow(new Date(session.updatedAt), { addSuffix: true })}
