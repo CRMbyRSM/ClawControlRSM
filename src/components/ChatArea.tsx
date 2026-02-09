@@ -1,4 +1,4 @@
-import { useRef, useEffect, Fragment } from 'react'
+import { useRef, useEffect, Fragment, memo, useMemo, useCallback } from 'react'
 import { useStore } from '../store'
 import { Message } from '../lib/openclaw-client'
 import { format, isSameDay } from 'date-fns'
@@ -27,13 +27,29 @@ const channelLabels: Record<string, { label: string; icon: string }> = {
   direct: { label: 'ClawControlRSM', icon: '🖥️' },
 }
 
+// Shared markdown plugins — created once, not per render
+const remarkPlugins = [remarkGfm]
+const rehypePlugins = [rehypeSanitize]
+
 export function ChatArea() {
   const { messages, isStreaming, agents, currentAgentId } = useStore()
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const isAutoScrollRef = useRef(true)
+  const chatAreaRef = useRef<HTMLDivElement>(null)
   const currentAgent = agents.find((a) => a.id === currentAgentId)
 
+  // Only auto-scroll if user is near the bottom
+  const handleScroll = useCallback(() => {
+    const el = chatAreaRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150
+    isAutoScrollRef.current = nearBottom
+  }, [])
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (isAutoScrollRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'auto' })
+    }
   }, [messages])
 
   if (messages.length === 0) {
@@ -61,32 +77,38 @@ export function ChatArea() {
     )
   }
 
-  // Track channel changes for dividers
-  let lastChannel = ''
+  // Pre-compute channel info for dividers
+  const messagesWithMeta = useMemo(() => {
+    let lastChannel = ''
+    return messages.map((message, index) => {
+      const isNewDay = index === 0 || !isSameDay(new Date(message.timestamp), new Date(messages[index - 1].timestamp))
+      const currentChannel = detectChannel(message)
+      const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
+      lastChannel = currentChannel
+      return { message, isNewDay, showChannelDivider, channel: currentChannel }
+    })
+  }, [messages])
 
   return (
-    <div className="chat-area">
+    <div className="chat-area" ref={chatAreaRef} onScroll={handleScroll}>
       <div className="chat-container">
-        {messages.map((message, index) => {
-          const isNewDay = index === 0 || !isSameDay(new Date(message.timestamp), new Date(messages[index - 1].timestamp))
-          const currentChannel = detectChannel(message)
-          const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
-          lastChannel = currentChannel
-          
+        {messagesWithMeta.map(({ message, isNewDay, showChannelDivider, channel }, index) => {
+          const isLastMessage = index === messagesWithMeta.length - 1
           return (
             <Fragment key={message.id}>
               {isNewDay && <DateSeparator date={new Date(message.timestamp)} />}
-              {showChannelDivider && <ChannelDivider channel={currentChannel} />}
+              {showChannelDivider && <ChannelDivider channel={channel} />}
               <MessageBubble
                 message={message}
                 agentName={currentAgent?.name}
-                channel={currentChannel}
+                channel={channel}
+                isStreaming={isLastMessage && isStreaming}
               />
             </Fragment>
           )
         })}
 
-        {isStreaming && (
+        {isStreaming && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
           <div className="message agent typing-indicator-container">
             <div className="message-avatar">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -138,14 +160,91 @@ function ChannelDivider({ channel }: { channel: string }) {
   )
 }
 
-function MessageBubble({
+// Memoized markdown components — created once
+const markdownComponents = {
+  code(props: any) {
+    const { children, className, node: _node, ...rest } = props
+    const match = /language-(\w+)/.exec(className || '')
+    return match ? (
+      <pre>
+        <div className="code-language">{match[1]}</div>
+        <code className={className} {...rest}>
+          {children}
+        </code>
+      </pre>
+    ) : (
+      <code className={className} {...rest}>
+        {children}
+      </code>
+    )
+  },
+  a(props: any) {
+    const { href, children, ...rest } = props
+    return (
+      <a
+        {...rest}
+        href={href}
+        onClick={(e: React.MouseEvent) => {
+          e.preventDefault()
+          if (href) {
+            if (window.electronAPI?.openExternal) {
+              window.electronAPI.openExternal(href)
+            } else {
+              window.open(href, '_blank')
+            }
+          }
+        }}
+        style={{ cursor: 'pointer' }}
+      >
+        {children}
+      </a>
+    )
+  },
+  img(props: any) {
+    return (
+      <img
+        {...props}
+        className="message-image"
+        loading="lazy"
+        alt={props.alt || 'Image'}
+        onClick={() => {
+          if (props.src) {
+            if (window.electronAPI?.openExternal) {
+              window.electronAPI.openExternal(props.src)
+            } else {
+              window.open(props.src, '_blank')
+            }
+          }
+        }}
+      />
+    )
+  }
+}
+
+/** Memoized message content — only re-parses markdown when content changes */
+const MessageContent = memo(function MessageContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={remarkPlugins}
+      rehypePlugins={rehypePlugins}
+      components={markdownComponents}
+    >
+      {content}
+    </ReactMarkdown>
+  )
+})
+
+/** Memoized message bubble — skips re-render unless props actually change */
+const MessageBubble = memo(function MessageBubble({
   message,
   agentName,
-  channel
+  channel,
+  isStreaming
 }: {
   message: Message
   agentName?: string
   channel?: string
+  isStreaming?: boolean
 }) {
   const isUser = message.role === 'user'
   const time = format(new Date(message.timestamp), 'h:mm a')
@@ -222,74 +321,14 @@ function MessageBubble({
       )}
     </div>
   )
-}
-
-function MessageContent({ content }: { content: string }) {
+}, (prev, next) => {
+  // Custom comparison — only re-render if content actually changed
+  // During streaming, only the last message changes
+  if (prev.isStreaming || next.isStreaming) return false // always re-render streaming message
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeSanitize]}
-      components={{
-        code(props) {
-          const { children, className, node: _node, ...rest } = props
-          const match = /language-(\w+)/.exec(className || '')
-          return match ? (
-            <pre>
-              <div className="code-language">{match[1]}</div>
-              <code className={className} {...rest}>
-                {children}
-              </code>
-            </pre>
-          ) : (
-            <code className={className} {...rest}>
-              {children}
-            </code>
-          )
-        },
-        a(props) {
-          const { href, children, ...rest } = props
-          return (
-            <a
-              {...rest}
-              href={href}
-              onClick={(e) => {
-                e.preventDefault()
-                if (href) {
-                  if (window.electronAPI?.openExternal) {
-                    window.electronAPI.openExternal(href)
-                  } else {
-                    window.open(href, '_blank')
-                  }
-                }
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              {children}
-            </a>
-          )
-        },
-        img(props) {
-          return (
-            <img
-              {...props}
-              className="message-image"
-              loading="lazy"
-              alt={props.alt || 'Image'}
-              onClick={() => {
-                if (props.src) {
-                  if (window.electronAPI?.openExternal) {
-                    window.electronAPI.openExternal(props.src)
-                  } else {
-                    window.open(props.src, '_blank')
-                  }
-                }
-              }}
-            />
-          )
-        }
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+    prev.message.id === next.message.id &&
+    prev.message.content === next.message.content &&
+    prev.agentName === next.agentName &&
+    prev.channel === next.channel
   )
-}
+})
