@@ -83,7 +83,10 @@ const remarkPlugins = [remarkGfm]
 const rehypePlugins = [rehypeSanitize]
 
 export function ChatArea() {
-  const { messages, isStreaming, agents, currentAgentId } = useStore()
+  const messages = useStore((s) => s.messages)
+  const isStreaming = useStore((s) => s.isStreaming)
+  const agents = useStore((s) => s.agents)
+  const currentAgentId = useStore((s) => s.currentAgentId)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const isAutoScrollRef = useRef(true)
   const chatAreaRef = useRef<HTMLDivElement>(null)
@@ -99,15 +102,41 @@ export function ChatArea() {
 
   // Pre-compute channel info for dividers
   // IMPORTANT: This useMemo MUST be before any early returns (Rules of Hooks)
+  // The try/catch prevents errors here from corrupting React's internal hook
+  // state which would cause a secondary error #310 on re-render.
   const messagesWithMeta = useMemo(() => {
-    let lastChannel = ''
-    return messages.map((message, index) => {
-      const isNewDay = index === 0 || !isSameDay(new Date(message.timestamp), new Date(messages[index - 1].timestamp))
-      const currentChannel = detectChannel(message)
-      const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
-      lastChannel = currentChannel
-      return { message, isNewDay, showChannelDivider, channel: currentChannel }
-    })
+    try {
+      let lastChannel = ''
+      return messages
+        .filter((m): m is Message => m != null && typeof m === 'object')
+        .map((message, index, arr) => {
+          let isNewDay = index === 0
+          if (!isNewDay) {
+            try {
+              const curr = new Date(message.timestamp || 0)
+              const prev = new Date(arr[index - 1].timestamp || 0)
+              isNewDay = !isSameDay(curr, prev)
+            } catch {
+              isNewDay = false
+            }
+          }
+          const currentChannel = detectChannel(message)
+          const showChannelDivider = currentChannel !== lastChannel && lastChannel !== ''
+          lastChannel = currentChannel
+          return { message, isNewDay, showChannelDivider, channel: currentChannel }
+        })
+    } catch (err) {
+      console.error('[ClawControlRSM] useMemo crash in messagesWithMeta:', err)
+      // Return a safe fallback — render messages without metadata
+      return messages
+        .filter((m): m is Message => m != null && typeof m === 'object')
+        .map((message) => ({
+          message,
+          isNewDay: false,
+          showChannelDivider: false,
+          channel: 'direct' as string
+        }))
+    }
   }, [messages])
 
   useEffect(() => {
