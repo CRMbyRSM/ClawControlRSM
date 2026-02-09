@@ -162,29 +162,33 @@ function ChannelDivider({ channel }: { channel: string }) {
 }
 
 // Memoized markdown components — created once
+// IMPORTANT: react-markdown passes `node` (HAST AST object) and other non-DOM
+// props to every custom component. NEVER spread {...rest} or {...props} onto
+// DOM elements — only pass known, safe DOM attributes explicitly.
 const markdownComponents = {
   code(props: any) {
-    const { children, className, node: _node, ...rest } = props
+    const { children, className } = props
     const match = /language-(\w+)/.exec(className || '')
     return match ? (
       <pre>
         <div className="code-language">{match[1]}</div>
-        <code className={className} {...rest}>
+        <code className={className}>
           {children}
         </code>
       </pre>
     ) : (
-      <code className={className} {...rest}>
+      <code className={className}>
         {children}
       </code>
     )
   },
   a(props: any) {
-    const { href, children, ...rest } = props
+    const { href, children, title, className } = props
     return (
       <a
-        {...rest}
         href={href}
+        title={title}
+        className={className}
         onClick={(e: React.MouseEvent) => {
           e.preventDefault()
           if (href) {
@@ -202,18 +206,22 @@ const markdownComponents = {
     )
   },
   img(props: any) {
+    const { src, alt, title, width, height } = props
     return (
       <img
-        {...props}
+        src={src}
+        alt={alt || 'Image'}
+        title={title}
+        width={width}
+        height={height}
         className="message-image"
         loading="lazy"
-        alt={props.alt || 'Image'}
         onClick={() => {
-          if (props.src) {
+          if (src) {
             if (window.electronAPI?.openExternal) {
-              window.electronAPI.openExternal(props.src)
+              window.electronAPI.openExternal(src)
             } else {
-              window.open(props.src, '_blank')
+              window.open(src, '_blank')
             }
           }
         }}
