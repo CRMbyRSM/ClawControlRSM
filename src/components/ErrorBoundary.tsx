@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
+import { useStore } from '../store'
 
 interface Props {
   children: ReactNode
@@ -7,48 +8,65 @@ interface Props {
 interface State {
   hasError: boolean
   error: Error | null
+  componentStack: string
+  objectFindings: string[]
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, error: null, componentStack: '', objectFindings: [] }
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ClawControlRSM] React error boundary caught:', error)
     console.error('[ClawControlRSM] Component stack:', info.componentStack)
+
     // Scan ALL store data for non-primitive values that could crash React
     const objectFindings: string[] = []
     try {
-      const storeModule = require('../store')
-      const state = storeModule?.useStore?.getState?.()
+      const state = useStore.getState()
       if (state) {
-        const scanObj = (label: string, obj: any) => {
-          if (!obj || typeof obj !== 'object') return
+        const scanObj = (label: string, obj: any, depth = 0) => {
+          if (!obj || typeof obj !== 'object' || depth > 3) return
           for (const [k, v] of Object.entries(obj)) {
             if (v !== null && v !== undefined && typeof v === 'object') {
-              const snippet = JSON.stringify(v).slice(0, 150)
-              objectFindings.push(`${label}.${k} [${Array.isArray(v) ? 'array' : 'object'}]: ${snippet}`)
+              // Skip known structural fields and functions
+              if (typeof v === 'function') continue
+              if (k === 'attachments' || k === 'requirements' || k === 'missing' || k === 'install') continue
+              try {
+                const snippet = JSON.stringify(v).slice(0, 200)
+                objectFindings.push(`${label}.${k} [${Array.isArray(v) ? 'array' : 'object'}]: ${snippet}`)
+              } catch {
+                objectFindings.push(`${label}.${k} [non-serializable object]`)
+              }
             }
           }
         }
         state.messages?.forEach((m: any, i: number) => scanObj(`msg[${i}]`, m))
         state.sessions?.forEach((s: any, i: number) => scanObj(`session[${i}]`, s))
         state.agents?.forEach((a: any, i: number) => scanObj(`agent[${i}]`, a))
+        state.skills?.forEach((s: any, i: number) => scanObj(`skill[${i}]`, s))
+        state.cronJobs?.forEach((c: any, i: number) => scanObj(`cron[${i}]`, c))
       }
-    } catch { /* ignore */ }
+    } catch (scanErr) {
+      objectFindings.push(`[Store scan failed: ${scanErr}]`)
+    }
+
     console.error('[ClawControlRSM] Object findings:', objectFindings)
-    this.setState({ error, componentStack: info.componentStack || '', objectFindings } as any)
+    this.setState({
+      error,
+      componentStack: info.componentStack || '',
+      objectFindings
+    })
   }
 
   render() {
     if (this.state.hasError) {
-      const componentStack = (this.state as any).componentStack || ''
       return (
         <div style={{
           display: 'flex',
@@ -68,7 +86,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p style={{ color: '#8594a3', marginBottom: '0.5rem', maxWidth: '600px' }}>
             {this.state.error?.message || 'An unexpected error occurred'}
           </p>
-          {componentStack && (
+          {this.state.componentStack && (
             <pre style={{
               background: '#1a1d24',
               color: '#f59e0b',
@@ -82,9 +100,9 @@ export class ErrorBoundary extends Component<Props, State> {
               marginBottom: '1rem',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-all'
-            }}>{componentStack}</pre>
+            }}>{this.state.componentStack}</pre>
           )}
-          {((this.state as any).objectFindings?.length > 0) && (
+          {this.state.objectFindings.length > 0 && (
             <div style={{
               background: '#1a1d24',
               color: '#f87171',
@@ -92,15 +110,15 @@ export class ErrorBoundary extends Component<Props, State> {
               borderRadius: '8px',
               fontSize: '0.7rem',
               maxWidth: '600px',
-              maxHeight: '200px',
+              maxHeight: '250px',
               overflow: 'auto',
               textAlign: 'left',
               marginBottom: '1rem',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-all'
             }}>
-              <strong>Objects in store (potential culprits):</strong>{'\n'}
-              {(this.state as any).objectFindings.slice(0, 20).join('\n')}
+              <strong>⚠️ Objects found in store (potential culprits):</strong>{'\n'}
+              {this.state.objectFindings.slice(0, 30).join('\n')}
             </div>
           )}
           <p style={{ color: '#4a5568', fontSize: '0.8rem', marginBottom: '1.5rem', maxWidth: '500px' }}>
@@ -108,7 +126,6 @@ export class ErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={() => {
-              // Clear persisted state and reload
               try { localStorage.removeItem('clawcontrol-storage') } catch {}
               window.location.reload()
             }}
