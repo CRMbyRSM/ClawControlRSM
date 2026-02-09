@@ -87,6 +87,7 @@ export function ChatArea() {
   const isStreaming = useStore((s) => s.isStreaming)
   const agents = useStore((s) => s.agents)
   const currentAgentId = useStore((s) => s.currentAgentId)
+  const currentSessionId = useStore((s) => s.currentSessionId)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const isAutoScrollRef = useRef(true)
   const chatAreaRef = useRef<HTMLDivElement>(null)
@@ -186,6 +187,7 @@ export function ChatArea() {
                   agentName={currentAgent?.name}
                   channel={channel}
                   isStreaming={isLastMessage && isStreaming}
+                  sessionId={currentSessionId}
                 />
               </MessageErrorBoundary>
             </Fragment>
@@ -366,17 +368,36 @@ const MessageBubble = memo(function MessageBubble({
   message,
   agentName,
   channel,
-  isStreaming
+  isStreaming,
+  sessionId
 }: {
   message: Message
   agentName?: string
   channel?: string
   isStreaming?: boolean
+  sessionId?: string | null
 }) {
   const isUser = message.role === 'user'
   const time = format(new Date(message.timestamp), 'h:mm a')
   const showBadge = channel && channel !== 'direct'
   const info = channel ? (channelLabels[channel] || channelLabels.direct) : null
+
+  const pinMessage = useStore((s) => s.pinMessage)
+  const unpinMessage = useStore((s) => s.unpinMessage)
+  const pinnedMessages = useStore((s) => s.pinnedMessages)
+  const pinned = sessionId
+    ? pinnedMessages.some((p) => p.sessionId === sessionId && p.messageId === message.id)
+    : false
+
+  const handlePin = useCallback(() => {
+    if (!sessionId) return
+    if (pinned) {
+      const pin = pinnedMessages.find((p) => p.sessionId === sessionId && p.messageId === message.id)
+      if (pin) unpinMessage(pin.id)
+    } else {
+      pinMessage(sessionId, message)
+    }
+  }, [sessionId, pinned, pinnedMessages, message, pinMessage, unpinMessage])
 
   return (
     <div className={`message ${isUser ? 'user' : 'agent'}`}>
@@ -405,6 +426,16 @@ const MessageBubble = memo(function MessageBubble({
           )}
         </div>
         <div className="message-bubble">
+          <button
+            className={`pin-btn ${pinned ? 'pinned' : ''}`}
+            onClick={handlePin}
+            title={pinned ? 'Unpin message' : 'Pin message'}
+            aria-label={pinned ? 'Unpin message' : 'Pin message'}
+          >
+            <svg viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <path d="M12 2l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9l3-9z" />
+            </svg>
+          </button>
           {message.attachments && message.attachments.length > 0 && (
             <div className="message-attachments">
               {message.attachments.map((att, i) => (
@@ -456,6 +487,7 @@ const MessageBubble = memo(function MessageBubble({
     prev.message.id === next.message.id &&
     prev.message.content === next.message.content &&
     prev.agentName === next.agentName &&
-    prev.channel === next.channel
+    prev.channel === next.channel &&
+    prev.sessionId === next.sessionId
   )
 })

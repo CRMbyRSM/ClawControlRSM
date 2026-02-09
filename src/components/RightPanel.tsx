@@ -1,7 +1,14 @@
 import { useState } from 'react'
-import { useStore } from '../store'
+import { useStore, PinnedMessage } from '../store'
 import { Skill, CronJob } from '../lib/openclaw-client'
 import { safe } from '../lib/safe-render'
+import { format } from 'date-fns'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeSanitize from 'rehype-sanitize'
+
+const remarkPlugins = [remarkGfm]
+const rehypePlugins = [rehypeSanitize]
 
 export function RightPanel() {
   const {
@@ -14,7 +21,10 @@ export function RightPanel() {
     selectSkill,
     selectCronJob,
     selectedSkill,
-    selectedCronJob
+    selectedCronJob,
+    pinnedMessages,
+    currentSessionId,
+    unpinMessage
   } = useStore()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -31,10 +41,27 @@ export function RightPanel() {
       job.schedule.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const sessionPins = currentSessionId
+    ? pinnedMessages.filter((p) => p.sessionId === currentSessionId)
+    : []
+
+  const filteredPins = sessionPins.filter(
+    (pin) => pin.content.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <aside className={`right-panel ${rightPanelOpen ? 'visible' : 'hidden'}`}>
       <div className="panel-header">
         <div className="panel-tabs">
+          <button
+            className={`panel-tab ${rightPanelTab === 'pins' ? 'active' : ''}`}
+            onClick={() => setRightPanelTab('pins')}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14, marginRight: 4, verticalAlign: -2 }}>
+              <path d="M12 2l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9l3-9z" />
+            </svg>
+            Pins{sessionPins.length > 0 ? ` (${sessionPins.length})` : ''}
+          </button>
           <button
             className={`panel-tab ${rightPanelTab === 'skills' ? 'active' : ''}`}
             onClick={() => setRightPanelTab('skills')}
@@ -59,20 +86,52 @@ export function RightPanel() {
         </button>
       </div>
 
-      <div className="panel-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="M21 21l-4.35-4.35" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      {rightPanelTab !== 'pins' && (
+        <div className="panel-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      )}
 
-      {rightPanelTab === 'skills' ? (
+      {rightPanelTab === 'pins' ? (
+        <div className="panel-content">
+          {sessionPins.length > 0 ? (
+            <div className="panel-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search pins..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          ) : null}
+          {filteredPins.length > 0 ? (
+            filteredPins.map((pin) => (
+              <PinItem key={pin.id} pin={pin} onUnpin={() => unpinMessage(pin.id)} />
+            ))
+          ) : (
+            <div className="empty-panel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 40, height: 40, opacity: 0.3, marginBottom: 8 }}>
+                <path d="M12 2l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9l3-9z" />
+              </svg>
+              <p>No pinned messages</p>
+              <p className="hint">Hover over a message and click the star to pin it here</p>
+            </div>
+          )}
+        </div>
+      ) : rightPanelTab === 'skills' ? (
         <div className="panel-content">
           {filteredSkills.length > 0 ? (
             filteredSkills.map((skill, index) => (
@@ -108,6 +167,61 @@ export function RightPanel() {
         </div>
       )}
     </aside>
+  )
+}
+
+// Pinned message card
+function PinItem({ pin, onUnpin }: { pin: PinnedMessage; onUnpin: () => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const isLong = pin.content.length > 300
+  const displayContent = isLong && !expanded ? pin.content.slice(0, 300) + '…' : pin.content
+
+  let pinnedTime = ''
+  try {
+    pinnedTime = format(new Date(pin.pinnedAt), 'MMM d, h:mm a')
+  } catch { /* */ }
+
+  let originalTime = ''
+  try {
+    originalTime = format(new Date(pin.timestamp), 'MMM d, h:mm a')
+  } catch { /* */ }
+
+  return (
+    <div className="pin-item">
+      <div className="pin-item-header">
+        <span className={`pin-item-role ${pin.role}`}>
+          {pin.role === 'user' ? 'You' : pin.role === 'assistant' ? 'Assistant' : 'System'}
+        </span>
+        <span className="pin-item-time" title={`Pinned ${pinnedTime}`}>{safe(originalTime)}</span>
+        <button className="pin-item-unpin" onClick={onUnpin} title="Unpin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      {pin.attachments && pin.attachments.length > 0 && (
+        <div className="pin-item-attachments">
+          {pin.attachments.filter(a => a.type === 'image').map((att, i) => (
+            <img
+              key={i}
+              src={`data:${safe(att.mimeType)};base64,${safe(att.content)}`}
+              alt={`Pinned image ${i + 1}`}
+              className="pin-item-image"
+            />
+          ))}
+        </div>
+      )}
+      <div className="pin-item-content">
+        <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins}>
+          {displayContent}
+        </ReactMarkdown>
+      </div>
+      {isLong && (
+        <button className="pin-item-expand" onClick={() => setExpanded(!expanded)}>
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
   )
 }
 

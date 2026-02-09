@@ -2018,6 +2018,189 @@ a {
   height: 16px;
 }
 
+/* ===== Pin Button on Messages ===== */
+.message-bubble {
+  position: relative;
+}
+
+.pin-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.message-bubble:hover .pin-btn {
+  opacity: 0.6;
+}
+
+.pin-btn:hover {
+  opacity: 1 !important;
+  background: var(--bg-hover);
+  color: var(--accent-cyan);
+}
+
+.pin-btn.pinned {
+  opacity: 1;
+  color: var(--accent-cyan);
+}
+
+.pin-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ===== Pinned Messages Panel ===== */
+.pin-item {
+  padding: var(--space-md);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  background: var(--bg-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.pin-item:hover {
+  border-color: var(--border-default);
+}
+
+.pin-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.pin-item-role {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pin-item-role.user {
+  background: rgba(23, 161, 146, 0.15);
+  color: var(--accent-cyan);
+}
+
+.pin-item-role.assistant {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+.pin-item-role.system {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.pin-item-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.pin-item-unpin {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.pin-item:hover .pin-item-unpin {
+  opacity: 1;
+}
+
+.pin-item-unpin:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.pin-item-unpin svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pin-item-content {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  overflow: hidden;
+}
+
+.pin-item-content p {
+  margin: 0 0 var(--space-xs);
+}
+
+.pin-item-content p:last-child {
+  margin-bottom: 0;
+}
+
+.pin-item-content pre {
+  font-size: 0.75rem;
+  background: var(--bg-deep);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+.pin-item-content code {
+  font-size: 0.8em;
+}
+
+.pin-item-content img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.pin-item-attachments {
+  margin-bottom: var(--space-sm);
+}
+
+.pin-item-image {
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.pin-item-expand {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-body);
+}
+
+.pin-item-expand:hover {
+  text-decoration: underline;
+}
+
 /* Skill/Cron Item States */
 .skill-item.clickable,
 .cron-item.clickable {

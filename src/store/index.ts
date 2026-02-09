@@ -10,6 +10,17 @@ interface AgentDetail {
   files: AgentFile[]
 }
 
+export interface PinnedMessage {
+  id: string            // unique pin id
+  sessionId: string     // which session it belongs to
+  messageId: string     // original message id
+  content: string       // copy of message content
+  role: 'user' | 'assistant' | 'system'
+  timestamp: string     // original message timestamp
+  pinnedAt: string      // when it was pinned
+  attachments?: Array<{ type: string; mimeType: string; content: string }>
+}
+
 interface AppState {
   // Theme
   theme: 'dark' | 'light'
@@ -44,8 +55,8 @@ interface AppState {
   setSidebarCollapsed: (collapsed: boolean) => void
   rightPanelOpen: boolean
   setRightPanelOpen: (open: boolean) => void
-  rightPanelTab: 'skills' | 'crons'
-  setRightPanelTab: (tab: 'skills' | 'crons') => void
+  rightPanelTab: 'skills' | 'crons' | 'pins'
+  setRightPanelTab: (tab: 'skills' | 'crons' | 'pins') => void
 
   // Main View State
   mainView: 'chat' | 'skill-detail' | 'cron-detail' | 'agent-detail'
@@ -95,6 +106,13 @@ interface AppState {
   // Skills & Crons
   skills: Skill[]
   cronJobs: CronJob[]
+
+  // Pinned Messages (local-only, persisted)
+  pinnedMessages: PinnedMessage[]
+  pinMessage: (sessionId: string, message: Message) => void
+  unpinMessage: (pinId: string) => void
+  isPinned: (sessionId: string, messageId: string) => boolean
+  getPinsForSession: (sessionId: string) => PinnedMessage[]
 
   // Actions
   initializeApp: () => Promise<void>
@@ -404,6 +422,36 @@ export const useStore = create<AppState>()(
       // Skills & Crons
       skills: [],
       cronJobs: [],
+
+      // Pinned Messages
+      pinnedMessages: [],
+      pinMessage: (sessionId, message) => {
+        const pinId = `pin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        const pin: PinnedMessage = {
+          id: pinId,
+          sessionId,
+          messageId: message.id,
+          content: message.content,
+          role: message.role,
+          timestamp: message.timestamp,
+          pinnedAt: new Date().toISOString(),
+          attachments: message.attachments
+        }
+        set((state) => ({
+          pinnedMessages: [...state.pinnedMessages, pin]
+        }))
+      },
+      unpinMessage: (pinId) => {
+        set((state) => ({
+          pinnedMessages: state.pinnedMessages.filter((p) => p.id !== pinId)
+        }))
+      },
+      isPinned: (sessionId, messageId) => {
+        return get().pinnedMessages.some((p) => p.sessionId === sessionId && p.messageId === messageId)
+      },
+      getPinsForSession: (sessionId) => {
+        return get().pinnedMessages.filter((p) => p.sessionId === sessionId)
+      },
 
       // Actions
       initializeApp: async () => {
@@ -820,7 +868,8 @@ export const useStore = create<AppState>()(
         authMode: state.authMode,
         sidebarCollapsed: state.sidebarCollapsed,
         thinkingEnabled: state.thinkingEnabled,
-        notificationsEnabled: state.notificationsEnabled
+        notificationsEnabled: state.notificationsEnabled,
+        pinnedMessages: state.pinnedMessages
       })
     }
   )
