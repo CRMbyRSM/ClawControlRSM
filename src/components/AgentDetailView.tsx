@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store'
+import { safe } from '../lib/safe-render'
 
 export function AgentDetailView() {
   const { selectedAgentDetail, closeDetailView, saveAgentFile, refreshAgentFiles } = useStore()
@@ -77,7 +78,7 @@ export function AgentDetailView() {
                   }}
                 />
               ) : agent.emoji ? (
-                <span className="agent-emoji-full">{agent.emoji}</span>
+                <span className="agent-emoji-full">{safe(agent.emoji)}</span>
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -87,29 +88,29 @@ export function AgentDetailView() {
             </div>
 
             <div className="agent-profile-info">
-              <h1 className="agent-profile-name">{agent.name}</h1>
-              {agent.theme && <p className="agent-profile-theme">{agent.theme}</p>}
+              <h1 className="agent-profile-name">{safe(agent.name)}</h1>
+              {agent.theme && <p className="agent-profile-theme">{safe(agent.theme)}</p>}
 
               <div className="agent-profile-meta">
                 <div className="agent-meta-item">
                   <span className="agent-meta-label">ID</span>
-                  <span className="agent-meta-value">{agent.id}</span>
+                  <span className="agent-meta-value">{safe(agent.id)}</span>
                 </div>
                 <div className="agent-meta-item">
                   <span className="agent-meta-label">Status</span>
-                  <span className={`agent-meta-value status-${agent.status}`}>{agent.status}</span>
+                  <span className={`agent-meta-value status-${safe(agent.status)}`}>{safe(agent.status)}</span>
                 </div>
                 {agent.emoji && (
                   <div className="agent-meta-item">
                     <span className="agent-meta-label">Emoji</span>
-                    <span className="agent-meta-value">{agent.emoji}</span>
+                    <span className="agent-meta-value">{safe(agent.emoji)}</span>
                   </div>
                 )}
                 {agent.avatar && (
                   <div className="agent-meta-item">
                     <span className="agent-meta-label">Avatar</span>
-                    <span className="agent-meta-value avatar-url" title={agent.avatar}>
-                      {getAvatarDisplayValue()}
+                    <span className="agent-meta-value avatar-url" title={safe(agent.avatar)}>
+                      {safe(getAvatarDisplayValue())}
                     </span>
                   </div>
                 )}
@@ -133,13 +134,13 @@ export function AgentDetailView() {
               {agent.model && (
                 <div className="agent-config-item">
                   <span className="agent-config-label">Model</span>
-                  <span className="agent-config-value"><code>{agent.model}</code></span>
+                  <span className="agent-config-value"><code>{safe(agent.model)}</code></span>
                 </div>
               )}
               {agent.thinkingLevel && (
                 <div className="agent-config-item">
                   <span className="agent-config-label">Thinking</span>
-                  <span className="agent-config-value">{agent.thinkingLevel}</span>
+                  <span className="agent-config-value">{safe(agent.thinkingLevel)}</span>
                 </div>
               )}
               {agent.timeout !== undefined && (
@@ -165,7 +166,7 @@ export function AgentDetailView() {
         {/* Workspace Section */}
         <section className="detail-section">
           <h2>Workspace</h2>
-          <code className="file-path">{workspace}</code>
+          <code className="file-path">{safe(workspace)}</code>
         </section>
 
         {/* Files Section */}
@@ -176,7 +177,7 @@ export function AgentDetailView() {
               <div key={file.name} className={`agent-file-card ${file.missing ? 'missing' : ''}`}>
                 <div className="agent-file-header">
                   <div className="agent-file-info">
-                    <span className="agent-file-name">{file.name}</span>
+                    <span className="agent-file-name">{safe(file.name)}</span>
                     {file.missing ? (
                       <span className="agent-file-status missing">Not created</span>
                     ) : (

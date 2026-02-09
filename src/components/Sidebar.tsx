@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useStore } from '../store'
 import { formatDistanceToNow } from 'date-fns'
 import { Agent } from '../lib/openclaw-client'
+import { safe } from '../lib/safe-render'
 import logoUrl from '../../build/icon.png'
 
 export function Sidebar() {
@@ -101,12 +102,12 @@ export function Sidebar() {
                   </span>
                 )}
                 <div className="session-content">
-                  <div className="session-title">{typeof session.title === 'string' ? session.title : String(session.title || 'New Chat')}</div>
+                  <div className="session-title">{safe(session.title) || 'New Chat'}</div>
                   {session.lastMessage && (
-                    <div className="session-preview">{typeof session.lastMessage === 'string' ? session.lastMessage : String(session.lastMessage)}</div>
+                    <div className="session-preview">{safe(session.lastMessage)}</div>
                   )}
                   <div className="session-time">
-                    {formatDistanceToNow(new Date(session.updatedAt), { addSuffix: true })}
+                    {safe(formatDistanceToNow(new Date(session.updatedAt), { addSuffix: true }))}
                   </div>
                 </div>
                 {unreadCounts[session.id] > 0 && (
@@ -278,9 +279,9 @@ function AgentSelector({
       <div className="agent-selected" onClick={() => setOpen(!open)}>
         <div className="agent-avatar">
           {currentAgent?.emoji ? (
-            <span className="agent-emoji-small">{currentAgent.emoji}</span>
+            <span className="agent-emoji-small">{safe(currentAgent.emoji)}</span>
           ) : currentAgent?.avatar ? (
-            <img src={currentAgent.avatar} alt={currentAgent.name} className="agent-avatar-img-small" />
+            <img src={currentAgent.avatar} alt={safe(currentAgent.name)} className="agent-avatar-img-small" />
           ) : (
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zm-4 12a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
@@ -288,9 +289,9 @@ function AgentSelector({
           )}
         </div>
         <div className="agent-info">
-          <div className="agent-name">{currentAgent?.name || 'Select Agent'}</div>
-          <div className={`agent-status ${currentAgent?.status || ''}`}>
-            {currentAgent?.status || 'Unknown'}
+          <div className="agent-name">{safe(currentAgent?.name) || 'Select Agent'}</div>
+          <div className={`agent-status ${safe(currentAgent?.status) || ''}`}>
+            {safe(currentAgent?.status) || 'Unknown'}
           </div>
         </div>
         <button
@@ -320,16 +321,16 @@ function AgentSelector({
           >
             <div className="agent-avatar small">
               {agent.emoji ? (
-                <span className="agent-emoji-small">{agent.emoji}</span>
+                <span className="agent-emoji-small">{safe(agent.emoji)}</span>
               ) : agent.avatar ? (
-                <img src={agent.avatar} alt={agent.name} className="agent-avatar-img-small" />
+                <img src={agent.avatar} alt={safe(agent.name)} className="agent-avatar-img-small" />
               ) : (
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zm-4 12a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
                 </svg>
               )}
             </div>
-            <span>{agent.name}</span>
+            <span>{safe(agent.name)}</span>
             {agent.id === currentAgent?.id && (
               <svg className="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 6L9 17l-5-5" />

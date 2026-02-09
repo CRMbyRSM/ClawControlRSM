@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useStore } from '../store'
+import { safe } from '../lib/safe-render'
 
 export function CronJobDetailView() {
   const { selectedCronJob, closeDetailView, client, fetchCronJobs } = useStore()
@@ -32,9 +33,9 @@ export function CronJobDetailView() {
             </svg>
           </div>
           <div>
-            <h1 className="detail-title">{selectedCronJob.name}</h1>
+            <h1 className="detail-title">{safe(selectedCronJob.name)}</h1>
             {selectedCronJob.description && (
-              <p className="detail-subtitle">{selectedCronJob.description}</p>
+              <p className="detail-subtitle">{safe(selectedCronJob.description)}</p>
             )}
           </div>
         </div>
@@ -62,7 +63,7 @@ export function CronJobDetailView() {
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
-            <span className="schedule-expression">{selectedCronJob.schedule}</span>
+            <span className="schedule-expression">{safe(selectedCronJob.schedule)}</span>
           </div>
         </div>
         {selectedCronJob.nextRun && isActive && (
@@ -73,7 +74,7 @@ export function CronJobDetailView() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
-              <span>{selectedCronJob.nextRun}</span>
+              <span>{safe(selectedCronJob.nextRun)}</span>
             </div>
           </div>
         )}
@@ -83,7 +84,7 @@ export function CronJobDetailView() {
         {selectedCronJob.content ? (
           <div className="markdown-content">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {selectedCronJob.content}
+              {safe(selectedCronJob.content)}
             </ReactMarkdown>
           </div>
         ) : (

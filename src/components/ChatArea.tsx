@@ -5,6 +5,7 @@ import { format, isSameDay } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize from 'rehype-sanitize'
+import { safe } from '../lib/safe-render'
 import logoUrl from '../../build/icon.png'
 
 /** Detect the channel/source of a message from its content */
@@ -60,7 +61,7 @@ export function ChatArea() {
             <img src={logoUrl} alt="ClawControlRSM logo" />
           </div>
           <h2>Start a Conversation</h2>
-          <p>Send a message to begin chatting with {currentAgent?.name || 'the AI assistant'}</p>
+          <p>Send a message to begin chatting with {safe(currentAgent?.name) || 'the AI assistant'}</p>
           <div className="quick-actions">
             <button className="quick-action">
               <span>Explain a concept</span>
@@ -141,7 +142,7 @@ function DateSeparator({ date }: { date: Date }) {
 
   return (
     <div className="date-separator">
-      <span>{dateText}</span>
+      <span>{safe(dateText)}</span>
     </div>
   )
 }
@@ -149,11 +150,11 @@ function DateSeparator({ date }: { date: Date }) {
 function ChannelDivider({ channel }: { channel: string }) {
   const info = channelLabels[channel] || channelLabels.direct
   return (
-    <div className={`channel-divider channel-${channel}`}>
+    <div className={`channel-divider channel-${safe(channel)}`}>
       <div className="channel-divider-line" />
       <span className="channel-divider-label">
-        <span className="channel-divider-icon">{info.icon}</span>
-        {info.label}
+        <span className="channel-divider-icon">{safe(info.icon)}</span>
+        {safe(info.label)}
       </span>
       <div className="channel-divider-line" />
     </div>
@@ -223,13 +224,15 @@ const markdownComponents = {
 
 /** Memoized message content — only re-parses markdown when content changes */
 const MessageContent = memo(function MessageContent({ content }: { content: string }) {
+  // Nuclear safety: ensure content is always a string no matter what
+  const safeContent = typeof content === 'string' ? content : safe(content)
   return (
     <ReactMarkdown
       remarkPlugins={remarkPlugins}
       rehypePlugins={rehypePlugins}
       components={markdownComponents}
     >
-      {content}
+      {safeContent}
     </ReactMarkdown>
   )
 })
@@ -265,15 +268,15 @@ const MessageBubble = memo(function MessageBubble({
         <div className="message-header">
           {isUser ? (
             <>
-              <span className="message-time">{time}</span>
-              {showBadge && info && <span className={`channel-badge channel-badge-${channel}`}>{info.icon} {info.label}</span>}
+              <span className="message-time">{safe(time)}</span>
+              {showBadge && info && <span className={`channel-badge channel-badge-${safe(channel)}`}>{safe(info.icon)} {safe(info.label)}</span>}
               <span className="message-author">You</span>
             </>
           ) : (
             <>
-              <span className="message-author">{agentName || 'Assistant'}</span>
-              {showBadge && info && <span className={`channel-badge channel-badge-${channel}`}>{info.icon} {info.label}</span>}
-              <span className="message-time">{time}</span>
+              <span className="message-author">{safe(agentName) || 'Assistant'}</span>
+              {showBadge && info && <span className={`channel-badge channel-badge-${safe(channel)}`}>{safe(info.icon)} {safe(info.label)}</span>}
+              <span className="message-time">{safe(time)}</span>
             </>
           )}
         </div>
@@ -284,14 +287,14 @@ const MessageBubble = memo(function MessageBubble({
                 <div key={i} className="attachment-thumbnail">
                   {att.type === 'image' ? (
                     <img
-                      src={`data:${att.mimeType};base64,${att.content}`}
+                      src={`data:${safe(att.mimeType)};base64,${safe(att.content)}`}
                       alt={`Attachment ${i + 1}`}
                       className="attachment-image"
                     />
                   ) : (
                     <div className="attachment-file">
                       <span className="attachment-icon">📎</span>
-                      <span className="attachment-name">{att.mimeType}</span>
+                      <span className="attachment-name">{safe(att.mimeType)}</span>
                     </div>
                   )}
                 </div>
@@ -307,10 +310,10 @@ const MessageBubble = memo(function MessageBubble({
                 </svg>
                 <span>Thinking...</span>
               </div>
-              <div className="thinking-content">{typeof message.thinking === 'string' ? message.thinking : JSON.stringify(message.thinking)}</div>
+              <div className="thinking-content">{safe(message.thinking)}</div>
             </div>
           )}
-          <MessageContent content={typeof message.content === 'string' ? message.content : String(message.content || '')} />
+          <MessageContent content={safe(message.content)} />
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { useStore } from '../store'
+import { safe } from '../lib/safe-render'
 
 export function SkillDetailView() {
   const { selectedSkill, closeDetailView, toggleSkillEnabled, client, fetchSkills } = useStore()
@@ -37,7 +38,7 @@ export function SkillDetailView() {
         <div className="detail-title-section">
           <div className="detail-icon skill-icon">
             {selectedSkill.emoji ? (
-              <span className="skill-emoji">{selectedSkill.emoji}</span>
+              <span className="skill-emoji">{safe(selectedSkill.emoji)}</span>
             ) : (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
@@ -45,8 +46,8 @@ export function SkillDetailView() {
             )}
           </div>
           <div>
-            <h1 className="detail-title">{selectedSkill.name}</h1>
-            <p className="detail-subtitle">{selectedSkill.description}</p>
+            <h1 className="detail-title">{safe(selectedSkill.name)}</h1>
+            <p className="detail-subtitle">{safe(selectedSkill.description)}</p>
           </div>
         </div>
         <div className="detail-actions">
@@ -78,7 +79,7 @@ export function SkillDetailView() {
             </div>
             <div className="status-item">
               <span className="status-label">Source</span>
-              <span className="status-value">{selectedSkill.source || 'Unknown'}</span>
+              <span className="status-value">{safe(selectedSkill.source) || 'Unknown'}</span>
             </div>
             {selectedSkill.bundled !== undefined && (
               <div className="status-item">
@@ -103,7 +104,7 @@ export function SkillDetailView() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
               </svg>
-              {selectedSkill.homepage}
+              {safe(selectedSkill.homepage)}
             </a>
           </section>
         )}
@@ -120,8 +121,8 @@ export function SkillDetailView() {
                     {selectedSkill.requirements.bins.map((bin) => {
                       const isMissing = selectedSkill.missing?.bins.includes(bin)
                       return (
-                        <span key={bin} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
-                          {isMissing ? '✗' : '✓'} {bin}
+                        <span key={safe(bin)} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
+                          {isMissing ? '✗' : '✓'} {safe(bin)}
                         </span>
                       )
                     })}
@@ -135,8 +136,8 @@ export function SkillDetailView() {
                     {selectedSkill.requirements.env.map((envVar) => {
                       const isMissing = selectedSkill.missing?.env.includes(envVar)
                       return (
-                        <span key={envVar} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
-                          {isMissing ? '✗' : '✓'} {envVar}
+                        <span key={safe(envVar)} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
+                          {isMissing ? '✗' : '✓'} {safe(envVar)}
                         </span>
                       )
                     })}
@@ -150,8 +151,8 @@ export function SkillDetailView() {
                     {selectedSkill.requirements.config.map((cfg) => {
                       const isMissing = selectedSkill.missing?.config.includes(cfg)
                       return (
-                        <span key={cfg} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
-                          {isMissing ? '✗' : '✓'} {cfg}
+                        <span key={safe(cfg)} className={`requirement-badge ${isMissing ? 'missing' : 'satisfied'}`}>
+                          {isMissing ? '✗' : '✓'} {safe(cfg)}
                         </span>
                       )
                     })}
@@ -163,8 +164,8 @@ export function SkillDetailView() {
                   <h3>Operating System</h3>
                   <div className="requirement-items">
                     {selectedSkill.requirements.os.map((os) => (
-                      <span key={os} className="requirement-badge satisfied">
-                        {os}
+                      <span key={safe(os)} className="requirement-badge satisfied">
+                        {safe(os)}
                       </span>
                     ))}
                   </div>
@@ -186,8 +187,8 @@ export function SkillDetailView() {
                   onClick={() => handleInstall(option.id)}
                 >
                   <div className="install-info">
-                    <span className="install-label">{option.label}</span>
-                    <span className="install-kind">{option.kind}</span>
+                    <span className="install-label">{safe(option.label)}</span>
+                    <span className="install-kind">{safe(option.kind)}</span>
                   </div>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -204,8 +205,8 @@ export function SkillDetailView() {
             <h2>Triggers</h2>
             <div className="triggers-list">
               {selectedSkill.triggers.map((trigger, index) => (
-                <span key={trigger || index} className="trigger-badge large">
-                  {trigger}
+                <span key={safe(trigger) || index} className="trigger-badge large">
+                  {safe(trigger)}
                 </span>
               ))}
             </div>
@@ -216,7 +217,7 @@ export function SkillDetailView() {
         {selectedSkill.filePath && (
           <section className="detail-section muted">
             <h2>Skill Location</h2>
-            <code className="file-path">{selectedSkill.filePath}</code>
+            <code className="file-path">{safe(selectedSkill.filePath)}</code>
           </section>
         )}
       </div>

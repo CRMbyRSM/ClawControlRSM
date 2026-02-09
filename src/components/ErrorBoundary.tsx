@@ -22,24 +22,28 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ClawControlRSM] React error boundary caught:', error)
     console.error('[ClawControlRSM] Component stack:', info.componentStack)
-    console.error('[ClawControlRSM] Full error:', error.message, error.stack)
-    // Try to dump store state for debugging
+    // Scan ALL store data for non-primitive values that could crash React
+    const objectFindings: string[] = []
     try {
       const storeModule = require('../store')
       const state = storeModule?.useStore?.getState?.()
       if (state) {
-        console.error('[ClawControlRSM] Store snapshot — messages:', state.messages?.length, 'sessions:', state.sessions?.length, 'agents:', state.agents?.length)
-        // Check for objects in messages
-        state.messages?.forEach((m: any, i: number) => {
-          for (const [k, v] of Object.entries(m || {})) {
-            if (v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v)) {
-              console.error(`[ClawControlRSM] OBJECT FOUND in message[${i}].${k}:`, JSON.stringify(v).slice(0, 200))
+        const scanObj = (label: string, obj: any) => {
+          if (!obj || typeof obj !== 'object') return
+          for (const [k, v] of Object.entries(obj)) {
+            if (v !== null && v !== undefined && typeof v === 'object') {
+              const snippet = JSON.stringify(v).slice(0, 150)
+              objectFindings.push(`${label}.${k} [${Array.isArray(v) ? 'array' : 'object'}]: ${snippet}`)
             }
           }
-        })
+        }
+        state.messages?.forEach((m: any, i: number) => scanObj(`msg[${i}]`, m))
+        state.sessions?.forEach((s: any, i: number) => scanObj(`session[${i}]`, s))
+        state.agents?.forEach((a: any, i: number) => scanObj(`agent[${i}]`, a))
       }
     } catch { /* ignore */ }
-    this.setState({ error, componentStack: info.componentStack || '' } as any)
+    console.error('[ClawControlRSM] Object findings:', objectFindings)
+    this.setState({ error, componentStack: info.componentStack || '', objectFindings } as any)
   }
 
   render() {
@@ -79,6 +83,25 @@ export class ErrorBoundary extends Component<Props, State> {
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-all'
             }}>{componentStack}</pre>
+          )}
+          {((this.state as any).objectFindings?.length > 0) && (
+            <div style={{
+              background: '#1a1d24',
+              color: '#f87171',
+              padding: '12px',
+              borderRadius: '8px',
+              fontSize: '0.7rem',
+              maxWidth: '600px',
+              maxHeight: '200px',
+              overflow: 'auto',
+              textAlign: 'left',
+              marginBottom: '1rem',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all'
+            }}>
+              <strong>Objects in store (potential culprits):</strong>{'\n'}
+              {(this.state as any).objectFindings.slice(0, 20).join('\n')}
+            </div>
           )}
           <p style={{ color: '#4a5568', fontSize: '0.8rem', marginBottom: '1.5rem', maxWidth: '500px' }}>
             Screenshot this and send to Antonella for debugging

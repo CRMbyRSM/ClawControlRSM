@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { Skill, CronJob } from '../lib/openclaw-client'
+import { safe } from '../lib/safe-render'
 
 export function RightPanel() {
   const {
@@ -128,7 +129,7 @@ function SkillItem({ skill, isSelected, onClick }: SkillItemProps) {
       <div className="skill-header">
         <div className="skill-icon">
           {skill.emoji ? (
-            <span className="skill-emoji">{skill.emoji}</span>
+            <span className="skill-emoji">{safe(skill.emoji)}</span>
           ) : (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
@@ -140,12 +141,12 @@ function SkillItem({ skill, isSelected, onClick }: SkillItemProps) {
         </div>
       </div>
       <div className="skill-content">
-        <div className="skill-name">{skill.name}</div>
-        <div className="skill-description">{skill.description}</div>
+        <div className="skill-name">{safe(skill.name)}</div>
+        <div className="skill-description">{safe(skill.description)}</div>
         <div className="skill-triggers">
           {skill.triggers.map((trigger, index) => (
-            <span key={trigger || index} className="trigger-badge">
-              {trigger}
+            <span key={safe(trigger) || index} className="trigger-badge">
+              {safe(trigger)}
             </span>
           ))}
         </div>
@@ -179,16 +180,16 @@ function CronJobItem({ job, isSelected, onClick }: CronJobItemProps) {
     >
       <div className={`cron-status ${job.status}`} />
       <div className="cron-content">
-        <div className="cron-name">{job.name}</div>
+        <div className="cron-name">{safe(job.name)}</div>
         <div className="cron-schedule">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />
           </svg>
-          <span>{job.schedule}</span>
+          <span>{safe(job.schedule)}</span>
         </div>
         <div className="cron-next">
-          {job.status === 'paused' ? 'Paused' : `Next run: ${job.nextRun || 'Unknown'}`}
+          {job.status === 'paused' ? 'Paused' : `Next run: ${safe(job.nextRun) || 'Unknown'}`}
         </div>
       </div>
       <button className="cron-toggle" onClick={handleToggle} aria-label="Toggle cron job">

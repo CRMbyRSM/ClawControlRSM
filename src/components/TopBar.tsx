@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStore } from '../store'
+import { safe } from '../lib/safe-render'
 
 export function TopBar() {
   const {
@@ -77,7 +78,7 @@ export function TopBar() {
           />
         ) : (
           <>
-            <span onClick={startEditing} style={{ cursor: 'pointer' }}>{sessionName}</span>
+            <span onClick={startEditing} style={{ cursor: 'pointer' }}>{safe(sessionName)}</span>
             <button className="edit-btn" onClick={startEditing} aria-label="Edit session name">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -90,7 +91,7 @@ export function TopBar() {
 
       <div className="connection-status">
         <span className={`status-dot ${connected ? 'connected' : 'disconnected'}`} />
-        <span className="status-text">{connected ? 'Connected' : 'Disconnected'}</span>
+        <span className="status-text">{safe(connected ? 'Connected' : 'Disconnected')}</span>
       </div>
 
       <div className="top-bar-actions">
