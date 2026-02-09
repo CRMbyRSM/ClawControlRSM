@@ -1,6 +1,6 @@
 {
   "name": "clawcontrol",
-  "version": "1.4.9",
+  "version": "1.5.0",
   "description": "Desktop and mobile client for OpenClaw AI assistant",
   "main": "dist-electron/main.js",
   "author": "ClawControlRSM Team",
@@ -10,6 +10,8 @@
     "build": "npx vite build && npx electron-builder",
     "build:win": "npx vite build && npx electron-builder --win",
     "build:mac": "npx vite build && npx electron-builder --mac",
+    "build:linux": "npx vite build && npx electron-builder --linux",
+    "build:all": "npx vite build && npx electron-builder --win --linux",
     "preview": "npx vite preview",
     "electron:dev": "npx vite",
     "test": "npx vitest",
@@ -98,6 +100,14 @@
       ],
       "icon": "build/icon.png",
       "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,
