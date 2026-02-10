@@ -18,7 +18,9 @@ export function SettingsModal() {
     notificationsEnabled,
     setNotificationsEnabled,
     updatePolicy,
-    setUpdatePolicy
+    setUpdatePolicy,
+    fontSize,
+    setFontSize
   } = useStore()
 
   const [url, setUrl] = useState(serverUrl)
@@ -169,6 +171,30 @@ export function SettingsModal() {
               </label>
             </label>
             <span className="form-hint">Get notified when an agent responds</span>
+          </div>
+
+          <div className="form-group" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Text Size</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '14px', minWidth: 'auto' }}
+                  onClick={() => setFontSize(Math.max(70, fontSize - 10))}
+                  disabled={fontSize <= 70}
+                >A−</button>
+                <span style={{ minWidth: '40px', textAlign: 'center', fontSize: '0.85rem', opacity: 0.7 }}>{fontSize}%</span>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '14px', minWidth: 'auto' }}
+                  onClick={() => setFontSize(Math.min(150, fontSize + 10))}
+                  disabled={fontSize >= 150}
+                >A+</button>
+              </div>
+            </label>
+            <span className="form-hint">Scale all text (70%–150%). Default: 100%</span>
           </div>
 
           <div className="form-group" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>

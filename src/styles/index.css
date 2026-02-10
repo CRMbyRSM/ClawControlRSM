@@ -167,7 +167,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 100%; /* scaled via JS from store.fontSize */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

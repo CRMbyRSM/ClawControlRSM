@@ -99,6 +99,10 @@ interface AppState {
   thinkingEnabled: boolean
   setThinkingEnabled: (enabled: boolean) => void
 
+  // Display Settings
+  fontSize: number // percentage: 80, 90, 100, 110, 120, 130
+  setFontSize: (size: number) => void
+
   // STT Settings
   sttUrl: string
   setSttUrl: (url: string) => void
@@ -373,6 +377,13 @@ export const useStore = create<AppState>()(
       hadStreamChunks: false,
       thinkingEnabled: false,
       setThinkingEnabled: (enabled) => set({ thinkingEnabled: enabled }),
+
+      // Display Settings
+      fontSize: 100,
+      setFontSize: (size) => {
+        set({ fontSize: size })
+        document.documentElement.style.fontSize = `${size}%`
+      },
 
       // STT Settings
       sttUrl: '',
@@ -1143,6 +1154,7 @@ export const useStore = create<AppState>()(
         authMode: state.authMode,
         sidebarCollapsed: state.sidebarCollapsed,
         thinkingEnabled: state.thinkingEnabled,
+        fontSize: state.fontSize,
         notificationsEnabled: state.notificationsEnabled,
         sttUrl: state.sttUrl,
         sttModel: state.sttModel,
@@ -1150,7 +1162,12 @@ export const useStore = create<AppState>()(
         updatePolicy: state.updatePolicy,
         lastUpdateCheck: state.lastUpdateCheck,
         pinnedMessages: state.pinnedMessages
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.fontSize && state.fontSize !== 100) {
+          document.documentElement.style.fontSize = `${state.fontSize}%`
+        }
+      }
     }
   )
 )
