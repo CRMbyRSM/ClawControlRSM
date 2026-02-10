@@ -792,9 +792,23 @@ export const useStore = create<AppState>()(
 
           client.on('streamStart', (payload: unknown) => {
             const { sessionKey } = (payload || {}) as { sessionKey?: string }
-            const { currentSessionId } = get()
-            if (sessionKey && currentSessionId && sessionKey !== currentSessionId) return
-            set({ isStreaming: true, hadStreamChunks: false, activeToolCalls: [] })
+            const { currentSessionId, streamingSessionId: existingStream } = get()
+
+            // If we already know which session is streaming (set by sendMessage),
+            // use that as ground truth. Otherwise use the event's sessionKey.
+            const streamSession = existingStream || sessionKey
+
+            // Drop events for sessions we're not viewing
+            if (streamSession && currentSessionId && streamSession !== currentSessionId) return
+
+            // Save the streaming session so streamChunk/streamEnd can filter reliably
+            // even when individual chunks don't carry sessionKey
+            set({
+              isStreaming: true,
+              hadStreamChunks: false,
+              activeToolCalls: [],
+              ...(sessionKey && !existingStream ? { streamingSessionId: sessionKey } : {})
+            })
             get().startSubagentPolling()
           })
 
@@ -813,9 +827,11 @@ export const useStore = create<AppState>()(
             }
             const kind = (chunkArg && typeof chunkArg === 'object') ? String((chunkArg as any).kind || '') : ''
 
-            // Session filtering
-            const { currentSessionId } = get()
-            if (sessionKey && currentSessionId && sessionKey !== currentSessionId) return
+            // Session filtering — use streamingSessionId (set by sendMessage or streamStart)
+            // as the reliable source; fall back to per-chunk sessionKey
+            const { currentSessionId, streamingSessionId } = get()
+            const chunkSession = sessionKey || streamingSessionId
+            if (chunkSession && currentSessionId && chunkSession !== currentSessionId) return
 
             // Skip empty chunks
             if (!text) return
@@ -849,10 +865,17 @@ export const useStore = create<AppState>()(
 
           client.on('streamEnd', (payload: unknown) => {
             const { sessionKey } = (payload || {}) as { sessionKey?: string }
-            const { currentSessionId } = get()
-            if (sessionKey && currentSessionId && sessionKey !== currentSessionId) return
+            const { currentSessionId, streamingSessionId } = get()
+            const endSession = sessionKey || streamingSessionId
+            if (endSession && currentSessionId && endSession !== currentSessionId) {
+              // Stream ended for a different session — clear streaming state if it was ours
+              if (streamingSessionId && sessionKey === streamingSessionId) {
+                set({ isStreaming: false, streamingSessionId: null, hadStreamChunks: false, activeToolCalls: [] })
+              }
+              return
+            }
 
-            const { streamingSessionId, messages, hadStreamChunks } = get()
+            const { messages, hadStreamChunks } = get()
 
             // If streamEnd fires while we still have a streamingSessionId, the response completed
             if (streamingSessionId && hadStreamChunks) {
