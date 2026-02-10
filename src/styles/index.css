@@ -3172,15 +3172,24 @@ a {
   color: var(--text-secondary);
 }
 
-/* Stop button */
+/* Stop button — subtle, not alarming */
 .send-btn.stop-btn {
-  background: var(--accent-red, #ef4444);
-  color: white;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
   opacity: 1;
   box-shadow: none;
+  width: 36px;
+  height: 36px;
+}
+.send-btn.stop-btn svg {
+  width: 14px;
+  height: 14px;
 }
 .send-btn.stop-btn:hover {
-  background: #dc2626;
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
   box-shadow: none;
 }
 
