@@ -3346,6 +3346,9 @@ a {
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.3s ease;
 }
@@ -3367,6 +3370,7 @@ a {
   justify-content: space-between;
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -3398,6 +3402,9 @@ a {
 
 .modal-body {
   padding: var(--space-lg);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .form-group {
@@ -3510,6 +3517,7 @@ a {
   gap: var(--space-md);
   padding: var(--space-lg);
   border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .btn {
