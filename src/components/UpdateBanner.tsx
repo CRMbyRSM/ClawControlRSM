@@ -62,7 +62,7 @@ export function UpdateBanner() {
       justifyContent: 'center',
       gap: '12px',
       padding: '6px 16px',
-      backgroundColor: 'var(--accent, #58a6ff)',
+      backgroundColor: 'var(--accent-cyan, #17a192)',
       color: '#fff',
       fontSize: '0.85rem',
       fontWeight: 500,
