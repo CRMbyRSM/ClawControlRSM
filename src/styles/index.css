@@ -258,11 +258,11 @@ a {
 }
 
 .logo-text {
-  font-family: var(--font-display);
+  font-family: 'Poppins', var(--font-display);
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent-cyan);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .logo-version {
