@@ -82,6 +82,14 @@ interface AppState {
   thinkingEnabled: boolean
   setThinkingEnabled: (enabled: boolean) => void
 
+  // STT Settings
+  sttUrl: string
+  setSttUrl: (url: string) => void
+  sttModel: string
+  setSttModel: (model: string) => void
+  sttApiKey: string
+  setSttApiKey: (key: string) => void
+
   // Notifications & Unread
   notificationsEnabled: boolean
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
@@ -308,6 +316,14 @@ export const useStore = create<AppState>()(
       hadStreamChunks: false,
       thinkingEnabled: false,
       setThinkingEnabled: (enabled) => set({ thinkingEnabled: enabled }),
+
+      // STT Settings
+      sttUrl: '',
+      setSttUrl: (url) => set({ sttUrl: url }),
+      sttModel: '',
+      setSttModel: (model) => set({ sttModel: model }),
+      sttApiKey: '',
+      setSttApiKey: (key) => set({ sttApiKey: key }),
 
       // Notifications & Unread
       notificationsEnabled: false,
@@ -869,6 +885,9 @@ export const useStore = create<AppState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         thinkingEnabled: state.thinkingEnabled,
         notificationsEnabled: state.notificationsEnabled,
+        sttUrl: state.sttUrl,
+        sttModel: state.sttModel,
+        sttApiKey: state.sttApiKey,
         pinnedMessages: state.pinnedMessages
       })
     }

@@ -16,19 +16,31 @@ export function SettingsModal() {
     connected,
     connecting,
     notificationsEnabled,
-    setNotificationsEnabled
+    setNotificationsEnabled,
+    sttUrl,
+    setSttUrl,
+    sttModel,
+    setSttModel,
+    sttApiKey,
+    setSttApiKey
   } = useStore()
 
   const [url, setUrl] = useState(serverUrl)
   const [mode, setMode] = useState(authMode)
   const [token, setToken] = useState(gatewayToken)
+  const [localSttUrl, setLocalSttUrl] = useState(sttUrl)
+  const [localSttModel, setLocalSttModel] = useState(sttModel)
+  const [localSttApiKey, setLocalSttApiKey] = useState(sttApiKey)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setUrl(serverUrl)
     setMode(authMode)
     setToken(gatewayToken)
-  }, [serverUrl, authMode, gatewayToken, showSettings])
+    setLocalSttUrl(sttUrl)
+    setLocalSttModel(sttModel)
+    setLocalSttApiKey(sttApiKey)
+  }, [serverUrl, authMode, gatewayToken, sttUrl, sttModel, sttApiKey, showSettings])
 
   const validateUrl = (value: string) => {
     try {
@@ -62,6 +74,9 @@ export function SettingsModal() {
     setServerUrl(trimmedUrl)
     setAuthMode(mode)
     setGatewayToken(trimmedToken)
+    setSttUrl(localSttUrl.trim())
+    setSttModel(localSttModel.trim())
+    setSttApiKey(localSttApiKey.trim())
 
     // Try to connect
     try {
@@ -164,6 +179,50 @@ export function SettingsModal() {
               </label>
             </label>
             <span className="form-hint">Get notified when an agent responds</span>
+          </div>
+
+          <div className="form-group" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
+            <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '4px', display: 'block' }}>Speech-to-Text</label>
+            <span className="form-hint" style={{ marginBottom: '12px', display: 'block' }}>
+              Configure a Whisper-compatible STT service to enable voice notes. Works with OpenAI, Speaches, LocalAI, or any OpenAI-compatible endpoint.
+            </span>
+
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <label htmlFor="sttUrl">STT Endpoint URL</label>
+              <input
+                type="text"
+                id="sttUrl"
+                value={localSttUrl}
+                onChange={(e) => setLocalSttUrl(e.target.value)}
+                placeholder="http://localhost:8000/v1/audio/transcriptions"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <label htmlFor="sttModel">STT Model</label>
+              <input
+                type="text"
+                id="sttModel"
+                value={localSttModel}
+                onChange={(e) => setLocalSttModel(e.target.value)}
+                placeholder="whisper-large-v3"
+                autoComplete="off"
+              />
+              <span className="form-hint">Model name for the transcription API</span>
+            </div>
+
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <label htmlFor="sttApiKey">API Key (optional)</label>
+              <input
+                type="password"
+                id="sttApiKey"
+                value={localSttApiKey}
+                onChange={(e) => setLocalSttApiKey(e.target.value)}
+                placeholder="Only needed for OpenAI or protected endpoints"
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
 

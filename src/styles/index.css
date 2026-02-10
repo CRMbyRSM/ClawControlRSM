@@ -1751,6 +1751,43 @@ a {
   min-height: 48px;
 }
 
+/* STT disabled hint */
+.mic-btn.disabled-hint {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mic-btn.disabled-hint:hover {
+  opacity: 0.6;
+  background: none;
+  color: var(--text-secondary);
+}
+
+/* STT error toast */
+.stt-error-toast {
+  max-width: 1200px;
+  margin: var(--space-xs) auto 0;
+  font-size: 0.75rem;
+  color: var(--accent-red);
+  text-align: center;
+  animation: sttFadeOut 3s ease-out forwards;
+}
+
+@keyframes sttFadeOut {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* STT setup tooltip */
+.stt-setup-tooltip {
+  max-width: 1200px;
+  margin: var(--space-xs) auto 0;
+  font-size: 0.75rem;
+  color: var(--accent-amber);
+  text-align: center;
+  animation: sttFadeOut 3s ease-out forwards;
+}
+
 /* Message images */
 .message-image {
   max-width: 100%;

@@ -1,9 +1,6 @@
 import { useState, useRef, useEffect, useCallback, KeyboardEvent, ChangeEvent, ClipboardEvent, DragEvent } from 'react'
 import { useStore } from '../store'
 
-const SPEACHES_URL = 'http://192.168.0.254:8000/v1/audio/transcriptions'
-const STT_MODEL = 'deepdml/faster-whisper-large-v3-turbo-ct2'
-
 interface Attachment {
   id: string
   file: File
@@ -18,12 +15,14 @@ export function InputArea() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [isTranscribing, setIsTranscribing] = useState(false)
+  const [sttError, setSttError] = useState('')
+  const [sttTooltip, setSttTooltip] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { sendMessage, isStreaming, connected } = useStore()
+  const { sendMessage, isStreaming, connected, sttUrl, sttModel, sttApiKey } = useStore()
 
   const maxLength = 4000
 
@@ -57,15 +56,18 @@ export function InputArea() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         if (audioBlob.size < 100) return // too small, probably empty
 
-        // Transcribe via Speaches
+        // Transcribe via configured STT service
         setIsTranscribing(true)
         try {
           const formData = new FormData()
           formData.append('file', audioBlob, 'recording.webm')
-          formData.append('model', STT_MODEL)
+          if (sttModel) formData.append('model', sttModel)
           formData.append('language', 'en')
 
-          const res = await fetch(SPEACHES_URL, { method: 'POST', body: formData })
+          const headers: Record<string, string> = {}
+          if (sttApiKey) headers['Authorization'] = `Bearer ${sttApiKey}`
+
+          const res = await fetch(sttUrl, { method: 'POST', body: formData, headers })
           if (!res.ok) throw new Error(`STT error: ${res.status}`)
           const data = await res.json()
           const text = (data.text || '').trim()
@@ -76,7 +78,8 @@ export function InputArea() {
           }
         } catch (err) {
           console.error('Transcription failed:', err)
-          // Could show error toast here
+          setSttError('Transcription failed — check STT settings')
+          setTimeout(() => setSttError(''), 3000)
         } finally {
           setIsTranscribing(false)
         }
@@ -91,7 +94,7 @@ export function InputArea() {
     } catch (err) {
       console.error('Mic access denied:', err)
     }
-  }, [])
+  }, [sttUrl, sttModel, sttApiKey])
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -323,11 +326,18 @@ export function InputArea() {
 
         {!isRecording ? (
           <button
-            className={`mic-btn ${isTranscribing ? 'transcribing' : ''}`}
-            onClick={startRecording}
-            disabled={!connected || isTranscribing}
+            className={`mic-btn ${isTranscribing ? 'transcribing' : ''} ${!sttUrl ? 'disabled-hint' : ''}`}
+            onClick={() => {
+              if (!sttUrl) {
+                setSttTooltip(true)
+                setTimeout(() => setSttTooltip(false), 3000)
+                return
+              }
+              startRecording()
+            }}
+            disabled={!!sttUrl && (!connected || isTranscribing)}
             aria-label="Record voice note"
-            title={isTranscribing ? 'Transcribing...' : 'Record voice note'}
+            title={!sttUrl ? 'Configure STT in Settings' : isTranscribing ? 'Transcribing...' : 'Record voice note'}
           >
             {isTranscribing ? (
               <svg className="loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -419,6 +429,14 @@ export function InputArea() {
           Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line
         </span>
       </div>
+      {sttTooltip && (
+        <div className="stt-setup-tooltip">
+          Voice notes require an STT service. Configure it in Settings.
+        </div>
+      )}
+      {sttError && (
+        <div className="stt-error-toast">{sttError}</div>
+      )}
     </div>
   )
 }
