@@ -241,7 +241,7 @@ export const useStore = create<AppState>()(
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       sidebarCollapsed: false,
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-      rightPanelOpen: true,
+      rightPanelOpen: !Platform.isMobile(),
       setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
       rightPanelTab: 'skills',
       setRightPanelTab: (tab) => set({ rightPanelTab: tab }),
