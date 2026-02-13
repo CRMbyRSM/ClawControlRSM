@@ -74,13 +74,18 @@ export function SettingsModal() {
       return
     }
 
-    // Save settings
+    // Disconnect any existing/stale connection before applying new settings
+    disconnect()
+
     setServerUrl(trimmedUrl)
     setAuthMode(mode)
     setGatewayToken(trimmedToken)
     setUpdatePolicy(localUpdatePolicy)
 
-    // Try to connect
+    // Small delay to let disconnect + state settle before reconnecting
+    await new Promise(r => setTimeout(r, 100))
+
+    // Try to connect with new settings
     try {
       await connect()
       setShowSettings(false)
@@ -236,8 +241,8 @@ export function SettingsModal() {
           <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={connecting}>
-            {connecting ? 'Connecting...' : 'Save & Connect'}
+          <button className="btn btn-primary" onClick={handleSave}>
+            {connecting ? 'Reconnect' : 'Save & Connect'}
           </button>
         </div>
       </div>

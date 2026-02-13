@@ -1038,7 +1038,7 @@ export const useStore = create<AppState>()(
         if ((globalThis as any).__prsmClient === client) {
           (globalThis as any).__prsmClient = null
         }
-        set({ client: null, connected: false })
+        set({ client: null, connected: false, connecting: false })
       },
 
       sendMessage: async (content: string, attachments?: Array<{type: string, mimeType: string, content: string}>) => {
