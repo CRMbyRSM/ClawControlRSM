@@ -92,6 +92,27 @@ export interface Message {
   timestamp: string
   thinking?: string
   attachments?: MessageAttachment[]
+  /** True if this message is a tool call/result — hidden when thinking toggle is off */
+  isToolResult?: boolean
+  /** Tool call ID from the server — presence marks this as a tool-related message */
+  toolCallId?: string
+}
+
+/** Detect whether a raw message payload represents a tool call/result */
+export function isToolResultMessage(msg: any): boolean {
+  if (!msg) return false
+  const role = String(msg.role || '').toLowerCase()
+  if (role === 'tool' || role === 'toolresult' || role === 'tool_result' || role === 'function') return true
+  if (typeof msg.toolCallId === 'string' || typeof msg.tool_call_id === 'string') return true
+  if (typeof msg.toolName === 'string' || typeof msg.tool_name === 'string') return true
+  if (Array.isArray(msg.content)) {
+    const hasToolContent = msg.content.some((c: any) => {
+      const t = String(c?.type || '').toLowerCase()
+      return t === 'tool_use' || t === 'tool_result' || t === 'toolresult' || t === 'toolcall'
+    })
+    if (hasToolContent) return true
+  }
+  return false
 }
 
 export interface Session {
@@ -655,7 +676,9 @@ export class OpenClawClient {
                 content: isHeartbeatContent(text) ? '\u2764\uFE0F' : stripThinkingTags(text),
                 thinking,
                 timestamp: new Date(tsMs).toISOString(),
-                sessionKey: eventSessionKey
+                sessionKey: eventSessionKey,
+                isToolResult: isToolResultMessage(payload.message),
+                toolCallId: payload.message.toolCallId || payload.message.tool_call_id
               })
             }
           }

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { OpenClawClient, Message, Session, Agent, Skill, CronJob, AgentFile, stripThinkingTags } from '../lib/openclaw-client'
+import { OpenClawClient, Message, Session, Agent, Skill, CronJob, AgentFile, stripThinkingTags, isToolResultMessage } from '../lib/openclaw-client'
 import * as Platform from '../lib/platform'
 import { deepSanitize } from '../lib/safe-render'
 
@@ -753,6 +753,15 @@ export const useStore = create<AppState>()(
             const { currentSessionId } = get()
             if (currentSessionId && (!msgSessionKey || msgSessionKey !== currentSessionId)) return
 
+            // Drop tool results when thinking toggle is off (matches webchat behavior).
+            // Check both the tagged isToolResult flag AND the raw role from the server,
+            // since the gateway sends tool results with role="toolresult" or "tool_result".
+            const rawRole = String((message as any).role || '').toLowerCase()
+            const isTool = message.isToolResult
+              || rawRole === 'tool' || rawRole === 'toolresult' || rawRole === 'tool_result' || rawRole === 'function'
+              || !!(message as any).toolCallId || !!(message as any).tool_call_id
+            if (!get().thinkingEnabled && isTool) return
+
             let replacedStreaming = false
 
             set((state) => {
@@ -869,8 +878,7 @@ export const useStore = create<AppState>()(
               const messages = [...state.messages]
               const lastMessage = messages[messages.length - 1]
 
-              // Only append to an active streaming placeholder — finalized messages
-              // should not be extended (a new streaming message will be created instead).
+              // Append to an active streaming placeholder
               if (lastMessage && lastMessage.role === 'assistant' && lastMessage.id.startsWith('streaming-')) {
                 const rawContent = kind === 'replace'
                   ? text
@@ -880,6 +888,20 @@ export const useStore = create<AppState>()(
                 const displayContent = stripThinkingTags(rawContent)
 
                 const updatedMessage = { ...lastMessage, content: displayContent, rawContent }
+                messages[messages.length - 1] = updatedMessage
+                return { messages, isStreaming: true, hadStreamChunks: true }
+              } else if (lastMessage && lastMessage.role === 'assistant' && !state.thinkingEnabled) {
+                // When thinking is off, merge continuation chunks into the last assistant
+                // message rather than creating separate bubbles for each text segment
+                // between tool calls. This matches the webchat's single-bubble behavior.
+                const rawContent = (lastMessage.rawContent ?? lastMessage.content) + '\n\n' + text
+                const displayContent = stripThinkingTags(rawContent)
+                const updatedMessage = {
+                  ...lastMessage,
+                  id: `streaming-${Date.now()}`,
+                  content: displayContent,
+                  rawContent
+                }
                 messages[messages.length - 1] = updatedMessage
                 return { messages, isStreaming: true, hadStreamChunks: true }
               } else {

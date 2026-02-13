@@ -182,6 +182,15 @@ export function ChatArea() {
       return messages
         .filter((m): m is Message => m != null && typeof m === 'object')
         .filter((m) => !isHeartbeat(m))
+        .filter((m) => {
+          if (thinkingEnabled) return true
+          // Hide tool results when thinking is off (matches webchat behavior)
+          if (m.isToolResult) return false
+          const role = String(m.role || '').toLowerCase()
+          if (role === 'tool' || role === 'toolresult' || role === 'tool_result' || role === 'function') return false
+          if ((m as any).toolCallId || (m as any).tool_call_id) return false
+          return true
+        })
         .map((message, index, arr) => {
           let isNewDay = index === 0
           if (!isNewDay) {
