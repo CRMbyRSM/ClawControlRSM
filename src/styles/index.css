@@ -889,7 +889,7 @@ a {
 }
 
 .menu-btn {
-  display: none;
+  display: flex;
   width: 40px;
   height: 40px;
   align-items: center;
@@ -907,6 +907,22 @@ a {
 .menu-btn svg {
   width: 20px;
   height: 20px;
+}
+
+.topbar-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  transition: transform 0.3s ease;
+}
+
+.topbar-logo.spinning {
+  animation: logoSpin 1.5s linear infinite;
+}
+
+@keyframes logoSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .session-name {

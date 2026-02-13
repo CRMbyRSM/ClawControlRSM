@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStore } from '../store'
 import { safe } from '../lib/safe-render'
+import logoUrl from '../../build/icon.png'
 
 export function TopBar() {
   const {
@@ -57,9 +58,11 @@ export function TopBar() {
         onClick={() => setSidebarOpen(true)}
         aria-label="Open menu"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3 12h18M3 6h18M3 18h18" />
-        </svg>
+        <img
+          src={logoUrl}
+          alt="PRSM"
+          className={`topbar-logo ${agentBusy ? 'spinning' : ''}`}
+        />
       </button>
 
       <div className="session-name">
