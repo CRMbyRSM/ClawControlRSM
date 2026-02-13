@@ -1689,11 +1689,6 @@ a {
   background: rgba(16, 24, 40, 0.04);
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 /* Typing Indicator */
 .typing-indicator {
   display: flex;
