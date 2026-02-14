@@ -410,7 +410,7 @@ export class OpenClawClient {
         scopes: ['operator.admin', 'operator.approvals', 'operator.pairing'],
         caps: [],
         client: {
-          id: 'prsm-desktop',
+          id: 'openclaw-control-ui',
           displayName: 'PRSM',
           version: __APP_VERSION__,
           platform: typeof navigator !== 'undefined' ? navigator.platform || 'desktop' : 'desktop',
