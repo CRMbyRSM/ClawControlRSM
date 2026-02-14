@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Menu, safeStorage, Notification, session } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Menu, safeStorage, Notification } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join, dirname } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
@@ -270,23 +270,6 @@ app.on('certificate-error', (event, _webContents, url, _error, _certificate, cal
 
 app.whenReady().then(() => {
   loadTrustedHosts()
-
-  // Override Origin header on WebSocket upgrade requests so the gateway
-  // sees an origin matching the target host (Electron sends file:// or
-  // app:// which the gateway rejects as "origin not allowed").
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: ['ws://*/*', 'wss://*/*', 'http://*/*', 'https://*/*'] },
-    (details, callback) => {
-      if (details.resourceType === 'websocket' || details.url.includes('/ws')) {
-        try {
-          const wsUrl = new URL(details.url)
-          const httpOrigin = `${wsUrl.protocol === 'wss:' ? 'https:' : 'http:'}//${wsUrl.host}`
-          details.requestHeaders['Origin'] = httpOrigin
-        } catch { /* ignore */ }
-      }
-      callback({ requestHeaders: details.requestHeaders })
-    }
-  )
 
   createWindow()
   setupAutoUpdater()
